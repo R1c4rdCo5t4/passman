@@ -18,9 +18,7 @@ pub mod services {
         pub mod crypto;
         pub mod vault;
         pub mod constants;
-    }
-    pub mod operations {
-        pub mod vault;
+        pub mod operations;
     }
 }
 pub mod state;

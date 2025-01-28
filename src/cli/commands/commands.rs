@@ -3,7 +3,7 @@ use secrecy::SecretBox;
 use crate::cli::commands::enums::{Command, Vault};
 use crate::cli::stdin::{read_line_with};
 use crate::cli::stdout::clear_console;
-use crate::services::operations::vault::{add_to_vault, close_vault, create_vault, open_vault, show_vault};
+use crate::services::vault::operations::{add_to_vault, close_vault, create_vault, open_vault, show_vault};
 use crate::state::{AppState};
 
 type Result = std::result::Result<(), &'static str>;
@@ -20,7 +20,6 @@ pub fn execute_cmd(cmd: Command, state: &mut AppState) -> Result {
 }
 
 fn exit() -> Result {
-    println!("Exiting...");
     std::process::exit(0);
 }
 
@@ -80,41 +79,27 @@ fn vault_cmd(command: Vault, state: &mut AppState) -> Result {
         }
         Vault::List => {}
         Vault::Show(_, _) => {
-            if state.session.is_none() {
-                return Err("No vault opened");
-            }
+            check_vault(state)?;
             show_vault(state)
         }
         Vault::Add(service, username, password) => {
-            if state.session.is_none() {
-                return Err("No vault opened");
-            }
+            check_vault(state)?;
             add_to_vault(&service, &username, &password, state);
         }
         Vault::Update(_, _, _) => {
-            if state.session.is_none() {
-                return Err("No vault opened");
-            }
+            check_vault(state)?;
         }
         Vault::Delete(_) => {
-            if state.session.is_none() {
-                return Err("No vault opened");
-            }
+            check_vault(state)?;
         }
         Vault::Copy(_) => {
-            if state.session.is_none() {
-                return Err("No vault opened");
-            }
+            check_vault(state)?;
         }
         Vault::Search(_) => {
-            if state.session.is_none() {
-                return Err("No vault opened");
-            }
+            check_vault(state)?;
         }
         Vault::Destroy => {
-            if state.session.is_none() {
-                return Err("No vault opened");
-            }
+            check_vault(state)?;
         }
     }
     Ok(())
@@ -126,4 +111,12 @@ fn generate_pwd() -> Result {
 
 fn analyze_pwd(_: String) -> Result {
     todo!()
+}
+
+fn check_vault(state: &AppState) -> Result {
+    if state.session.is_none() {
+        Err("No vault opened")
+    } else {
+        Ok(())
+    }
 }
