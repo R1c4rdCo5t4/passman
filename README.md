@@ -24,14 +24,16 @@ credentials add -name <name> -user <user> -password <password> [-generate ...]
 credentials update -field <field>
 credentials delete <name>
 credentials copy -field <field>
+credentials search <query>
+credentials generate -length <length> [-symbols] [-copy] [-avoid-ambiguous] [-min-symbols <int>] [-min-digits <int>]
+credentials analyze <password>
 
 folders show [<name>]
 folders add <name>
 folders delete <name>
-folders update -name <name>
+folders rename <prev-name> <new-name>
 
-generate -length <length> [-symbols] [-copy] [-avoid-ambiguous] [-min-symbols <int>] [-min-digits <int>]
-analyze <password>
+
 ```
 
 ## How to run 
