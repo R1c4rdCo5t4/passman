@@ -1,6 +1,9 @@
 use std::fs;
+use secrecy::SecretBox;
 use crate::cli::commands::enums::{Command, Vault};
+use crate::cli::stdin::{read_line_with};
 use crate::cli::stdout::clear_console;
+use crate::services::vault::vault::{Vault, VaultManager};
 
 pub fn execute_cmd(cmd: Command) {
     match cmd {
@@ -52,8 +55,43 @@ fn help(cmd: Option<String>) {
 
 
 fn vault_cmd(command: Vault) {
-    println!("Executing vault command: {:?}", command);
-    todo!()
+    match command {
+        Vault::New(name) => {
+            loop {
+                let password = read_line_with("Choose master password for vault: ");
+                let confirm_password = read_line_with("Confirm master password: ");
+                if password == confirm_password {
+                    let secret = SecretBox::new(Box::from(String::from(password)));
+                    VaultManager::create(&*name, &secret).expect("Failed to create vault");
+                    break;
+                }
+                println!("Passwords do not match, please try again.");
+            }
+        }
+        Vault::Open(name) => {
+            let password = read_line_with("Enter master password for vault: ");
+            let secret = SecretBox::new(Box::from(String::from(password)));
+            let result = VaultManager::load(&name, &secret);
+            match result {
+                Ok(vault) => {
+                    println!("{:?}", &vault.entries);
+
+                }
+                Err(e) => {
+                    println!("Failed to load vault: {}", e);
+                }
+            }
+        }
+        Vault::Close => {}
+        Vault::List => {}
+        Vault::Show(_, _) => {}
+        Vault::Add(_, _, _) => {}
+        Vault::Update(_, _, _) => {}
+        Vault::Delete(_) => {}
+        Vault::Copy(_) => {}
+        Vault::Search(_) => {}
+        Vault::Destroy => {}
+    }
 }
 
 fn generate_pwd() {

@@ -11,3 +11,12 @@ pub mod cli {
 pub mod utils {
     pub mod vectors;
 }
+
+pub mod services {
+    pub mod vault {
+        pub mod models;
+        pub mod crypto;
+        pub mod vault;
+        pub mod constants;
+    }
+}

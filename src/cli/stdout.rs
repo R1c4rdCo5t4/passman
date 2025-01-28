@@ -3,7 +3,7 @@ use std::io::Write;
 use std::process::Command;
 
 pub fn print_prefix() {
-    print!("(passman) $ ");
+    print!("passman $ ");
     io::stdout().flush().expect("Failed to flush stdout");
 }
 
