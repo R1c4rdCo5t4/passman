@@ -3,6 +3,7 @@ pub mod cli {
     pub mod stdout;
     pub mod commands {
         pub mod enums;
+        pub mod parser;
         pub mod commands;
     }
 }

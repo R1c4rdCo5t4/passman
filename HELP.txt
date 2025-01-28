@@ -1,12 +1,4 @@
-# Passman
-
-Simple CLI password manager build using Rust that allows multiple users to store encrypted passwords locally.
-
-![](https://skillicons.dev/icons?i=rust)
-
-## Commands
-
-```
+Available Commands:
   help [<command>]                           > Get detailed help for a specific command
   clear                                      > Clear the screen
   exit                                       > Exit the program
@@ -24,10 +16,3 @@ Simple CLI password manager build using Rust that allows multiple users to store
   analyze <password>                         > Analyze the strength of a password
   generate <length> [-symbols] [-copy] [-avoid-ambiguous]
                                              > Generate a new password
-```
-
-## How to run 
-
-```
-cargo run
-```

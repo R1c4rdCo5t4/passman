@@ -1,4 +1,5 @@
-use passman::cli::commands::commands::{execute_cmd, parse_cmd};
+use passman::cli::commands::commands::execute_cmd;
+use passman::cli::commands::parser::{parse_cmd};
 use passman::cli::stdin::read_line;
 use passman::cli::stdout::{clear_console, print_prefix};
 
@@ -9,7 +10,9 @@ fn main() {
     loop {
         print_prefix();
         let line = read_line();
-        let cmd = parse_cmd(&line);
-        execute_cmd(cmd)
+        match parse_cmd(&line) {
+            Ok(cmd) => execute_cmd(cmd),
+            Err(err) => println!("{}", err),
+        }
     }
 }

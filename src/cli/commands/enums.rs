@@ -1,39 +1,25 @@
 #[derive(Debug, Clone, PartialEq)]
 pub enum Command {
-    Unknown,
-    Help,
+    Help(Option<String>),
+    Clear,
     Exit,
-    Session(Session),
-    Credentials(Credentials),
-    Folders(Folders),
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum Session {
-    New,
-    Login,
-    Status,
-    Extend,
-    Logout,
-    Panic,
-    Delete,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum Credentials {
-    Show(Option<String>, bool),
-    Add, // TODO
-    Update(String, String),
-    Delete(String),
-    Search(String),
+    Vault(Vault),
+    Analyze(String),
     Generate, // TODO
-    Analyze(String)
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum Folders {
-    Show(Option<String>),
-    Add(String),
+pub enum Vault {
+    New(String),
+    Open(String),
+    Close,
+    List,
+    Show(Option<String>, bool),
+    Add(String, String, String),
+    Update(String, String, String),
     Delete(String),
-    Rename(String, String),
+    Copy(String),
+    Search(String),
+    Destroy,
 }
+
