@@ -1,7 +1,6 @@
 use std::path::PathBuf;
 use directories::ProjectDirs;
 use std::fs::{self};
-use std::io::prelude::*;
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD;
 use secrecy::SecretBox;
@@ -52,7 +51,6 @@ impl VaultManager {
 
         let key = derive_key(password, &salt_bytes);
         crypto::decrypt_vault(
-            &vault_file.salt,
             &vault_file.nonce,
             &vault_file.ciphertext,
             &key

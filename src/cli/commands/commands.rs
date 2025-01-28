@@ -3,29 +3,33 @@ use secrecy::SecretBox;
 use crate::cli::commands::enums::{Command, Vault};
 use crate::cli::stdin::{read_line_with};
 use crate::cli::stdout::clear_console;
-use crate::services::vault::vault::{Vault, VaultManager};
+use crate::services::operations::vault::{add_to_vault, close_vault, create_vault, open_vault, show_vault};
+use crate::state::{AppState};
 
-pub fn execute_cmd(cmd: Command) {
+type Result = std::result::Result<(), &'static str>;
+
+pub fn execute_cmd(cmd: Command, state: &mut AppState) -> Result {
     match cmd {
         Command::Exit => exit(),
         Command::Help(cmd) => help(cmd),
         Command::Clear => clear(),
         Command::Analyze(pwd) => analyze_pwd(pwd),
         Command::Generate => generate_pwd(),
-        Command::Vault(cmd) => vault_cmd(cmd),
+        Command::Vault(cmd) => vault_cmd(cmd, state),
     }
 }
 
-fn exit() {
+fn exit() -> Result {
     println!("Exiting...");
     std::process::exit(0);
 }
 
-fn clear() {
+fn clear() -> Result {
     clear_console();
+    Ok(())
 }
 
-fn help(cmd: Option<String>) {
+fn help(cmd: Option<String>) -> Result {
     let help_text = fs::read_to_string("HELP.txt")
         .expect("Failed to read help file");
 
@@ -42,7 +46,7 @@ fn help(cmd: Option<String>) {
                 .collect();
 
             if lines.is_empty() {
-                println!("No help available for command: {}", command);
+                return Err("No help available for provided command");
             } else {
                 println!("{}", lines.join("\n"));
             }
@@ -51,55 +55,75 @@ fn help(cmd: Option<String>) {
             println!("{}", help_text);
         }
     }
+    Ok(())
 }
 
 
-fn vault_cmd(command: Vault) {
+fn vault_cmd(command: Vault, state: &mut AppState) -> Result {
     match command {
         Vault::New(name) => {
-            loop {
-                let password = read_line_with("Choose master password for vault: ");
-                let confirm_password = read_line_with("Confirm master password: ");
-                if password == confirm_password {
-                    let secret = SecretBox::new(Box::from(String::from(password)));
-                    VaultManager::create(&*name, &secret).expect("Failed to create vault");
-                    break;
-                }
-                println!("Passwords do not match, please try again.");
+            let password = read_line_with("Choose master password for vault: ");
+            let confirm_password = read_line_with("Confirm master password: ");
+            if password != confirm_password {
+                return Err("Passwords don't match");
             }
+            let secret = SecretBox::new(Box::from(String::from(password)));
+            create_vault(&name, &secret);
         }
         Vault::Open(name) => {
             let password = read_line_with("Enter master password for vault: ");
             let secret = SecretBox::new(Box::from(String::from(password)));
-            let result = VaultManager::load(&name, &secret);
-            match result {
-                Ok(vault) => {
-                    println!("{:?}", &vault.entries);
-
-                }
-                Err(e) => {
-                    println!("Failed to load vault: {}", e);
-                }
+            open_vault(&name, &secret, state);
+        }
+        Vault::Close => {
+            close_vault(state)
+        }
+        Vault::List => {}
+        Vault::Show(_, _) => {
+            if state.session.is_none() {
+                return Err("No vault opened");
+            }
+            show_vault(state)
+        }
+        Vault::Add(service, username, password) => {
+            if state.session.is_none() {
+                return Err("No vault opened");
+            }
+            add_to_vault(&service, &username, &password, state);
+        }
+        Vault::Update(_, _, _) => {
+            if state.session.is_none() {
+                return Err("No vault opened");
             }
         }
-        Vault::Close => {}
-        Vault::List => {}
-        Vault::Show(_, _) => {}
-        Vault::Add(_, _, _) => {}
-        Vault::Update(_, _, _) => {}
-        Vault::Delete(_) => {}
-        Vault::Copy(_) => {}
-        Vault::Search(_) => {}
-        Vault::Destroy => {}
+        Vault::Delete(_) => {
+            if state.session.is_none() {
+                return Err("No vault opened");
+            }
+        }
+        Vault::Copy(_) => {
+            if state.session.is_none() {
+                return Err("No vault opened");
+            }
+        }
+        Vault::Search(_) => {
+            if state.session.is_none() {
+                return Err("No vault opened");
+            }
+        }
+        Vault::Destroy => {
+            if state.session.is_none() {
+                return Err("No vault opened");
+            }
+        }
     }
+    Ok(())
 }
 
-fn generate_pwd() {
-    println!("Generating password");
+fn generate_pwd() -> Result {
     todo!()
 }
 
-fn analyze_pwd(password: String) {
-    println!("Analyzing password: {}", password);
+fn analyze_pwd(_: String) -> Result {
     todo!()
 }

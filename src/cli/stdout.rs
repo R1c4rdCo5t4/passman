@@ -2,8 +2,11 @@ use std::io;
 use std::io::Write;
 use std::process::Command;
 
-pub fn print_prefix() {
-    print!("passman $ ");
+pub fn print_prefix(vault: Option<&str>) {
+    match vault {
+        Some(vault) => print!("{}@passman $ ", vault),
+        None => print!("passman $ "),
+    }
     io::stdout().flush().expect("Failed to flush stdout");
 }
 

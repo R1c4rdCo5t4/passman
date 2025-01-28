@@ -2,10 +2,7 @@ use aes_gcm_siv::{
     aead::{Aead, KeyInit, generic_array::GenericArray},
     Aes256GcmSiv
 };
-use argon2::{self, password_hash::{
-    rand_core::OsRng,
-    PasswordHash, PasswordHasher, PasswordVerifier, SaltString
-}, Argon2, Params};
+use argon2::{self, password_hash::{PasswordHasher, SaltString}, Argon2, Params};
 use rand::Rng;
 use base64::{Engine as _, engine::general_purpose};
 use secrecy::{SecretBox, ExposeSecret};
@@ -47,13 +44,10 @@ pub fn encrypt_vault(vault: &Vault, password: &SecretBox<String>) -> (String, St
 }
 
 pub fn decrypt_vault(
-    salt: &str,
-    nonce: &str,
     ciphertext: &str,
+    nonce: &str,
     key: &SecretBox<[u8; 32]>
 ) -> Result<Vault, String> {
-    let salt_bytes = general_purpose::STANDARD.decode(salt)
-        .map_err(|e| format!("Salt decoding failed: {}", e))?;
     let nonce_bytes = general_purpose::STANDARD.decode(nonce)
         .map_err(|e| format!("Nonce decoding failed: {}", e))?;
     let ciphertext_bytes = general_purpose::STANDARD.decode(ciphertext)

@@ -1,4 +1,3 @@
-use std::io::Error;
 use crate::cli::commands::enums::{Command, Vault};
 use crate::utils::vectors::{get_str};
 

@@ -19,4 +19,8 @@ pub mod services {
         pub mod vault;
         pub mod constants;
     }
+    pub mod operations {
+        pub mod vault;
+    }
 }
+pub mod state;
