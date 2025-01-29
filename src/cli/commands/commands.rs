@@ -1,6 +1,7 @@
 use std::fs;
-use secrecy::SecretBox;
-use crate::cli::commands::models::{Command, VaultCommand};
+use arboard::Clipboard;
+use secrecy::{ExposeSecret, SecretBox};
+use crate::cli::commands::models::{Command, VaultCommand, VaultField};
 use crate::cli::stdin::{read_line_with};
 use crate::cli::stdout::clear_console;
 use crate::services::vault::operations::{add_to_vault, close_vault, create_vault, in_vault, list_vaults, open_vault, show_vault, vault_exists};
@@ -91,12 +92,22 @@ fn vault_cmd(command: VaultCommand, state: &mut AppState) -> Result {
         VaultCommand::Delete(_) => {
             in_vault(state)?;
         }
-        VaultCommand::Copy(_) => {
-            // if vec!["username", ""]
+        VaultCommand::Copy(service, field) => {
             in_vault(state)?;
-
+            let entry_opt = state.session.as_mut().unwrap().vault.entries.iter().find(|entry| entry.service == service);
+            if entry_opt.is_none() {
+                return Err("Service not found");
+            }
+            let entry = entry_opt.unwrap();
+            let mut clipboard = Clipboard::new().expect("Failed to initialize clipboard");
+            let text = match field {
+                VaultField::Username => entry.username.clone(),
+                VaultField::Password => entry.password.expose_secret().clone(),
+            };
+            clipboard.set_text(text).expect("Failed to copy to clipboard");
+            return Ok(Some(format!("Copied {} to clipboard", field.to_string().to_lowercase())))
         }
-        VaultCommand::Search(_) => {
+        VaultCommand::Panic => {
             in_vault(state)?;
         }
         VaultCommand::Destroy => {
@@ -113,9 +124,3 @@ fn generate_pwd() -> Result {
 fn analyze_pwd(_: String) -> Result {
     todo!()
 }
-
-// pub fn show_usage(cmd: &str) {
-//     let help_line = read_help_file(Some(cmd.to_string())).unwrap();
-//     let usage = help_line.split(">").collect::<Vec<&str>>()[1].trim().to_string();
-//     println!("Usage: {}", usage)
-// }

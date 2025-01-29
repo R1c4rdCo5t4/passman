@@ -1,3 +1,5 @@
+use std::fmt;
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum Command {
     Help(Option<String>),
@@ -18,8 +20,8 @@ pub enum VaultCommand {
     Add(String, String, String),
     Update(String, VaultField, String),
     Delete(String),
-    Copy(VaultField),
-    Search(String),
+    Copy(String, VaultField),
+    Panic,
     Destroy,
 }
 
@@ -27,4 +29,13 @@ pub enum VaultCommand {
 pub enum VaultField {
     Username,
     Password,
+}
+
+impl fmt::Display for VaultField {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            VaultField::Username => write!(f, "username"),
+            VaultField::Password => write!(f, "password"),
+        }
+    }
 }

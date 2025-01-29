@@ -11,8 +11,8 @@ pub fn parse_cmd(input: &str) -> Result<Command, AppError> {
         Some("help" | "h" | "?") => Ok(Command::Help(args.join(" ").into())),
         Some("clear" | "cls") => Ok(Command::Clear),
         Some("exit" | "quit" | "q") => Ok(Command::Exit),
-        Some("generate") => Ok(Command::Generate),
-        Some("analyze") => {
+        Some("generate" | "gen") => Ok(Command::Generate),
+        Some("analyze" | "scan") => {
             let password = args.get(0).ok_or(AppError::MissingArgument(String::from("password")))?;
             Ok(Command::Analyze(password.to_string()))
         },
@@ -29,16 +29,16 @@ pub fn parse_vault_cmd(args: Vec<&str>) -> Result<Command, AppError> {
             let name = get_arg(1, "name")?;
             Ok(VaultCommand::New(name.to_string()))
         },
-        Some(&"open") => {
+        Some(&"open" | &"enter") => {
             let name = get_arg(1, "name")?;
             Ok(VaultCommand::Open(name.to_string()))
         },
-        Some(&"close") => Ok(VaultCommand::Close),
-        Some(&"list") => Ok(VaultCommand::List),
+        Some(&"close" | &"exit") => Ok(VaultCommand::Close),
+        Some(&"list" | &"lst") => Ok(VaultCommand::List),
         Some(&"show") => {
-            let name = args.get(1).map(|s| s.to_string());
+            let service = args.get(1).map(|s| s.to_string());
             let unmask = args.contains(&"-unmask");
-            Ok(VaultCommand::Show(name, unmask))
+            Ok(VaultCommand::Show(service, unmask))
         },
         Some(&"add") => {
             let service = get_arg(1, "service")?.to_string();
@@ -46,25 +46,23 @@ pub fn parse_vault_cmd(args: Vec<&str>) -> Result<Command, AppError> {
             let password = get_arg(3, "password")?.to_string();
             Ok(VaultCommand::Add(service, username, password))
         },
-        Some(&"update") => {
+        Some(&"update" | &"up") => {
             let service = get_arg(1, "service")?.to_string();
             let field = parse_vault_field(get_arg(2, "field")?)?;
             let value = get_arg(3, "value")?.to_string();
             Ok(VaultCommand::Update(service, field, value))
         },
-        Some(&"delete") => {
-            let name = get_arg(1, "name")?;
-            Ok(VaultCommand::Delete(name.to_string()))
+        Some(&"delete" | &"del") => {
+            let service = get_arg(1, "service")?;
+            Ok(VaultCommand::Delete(service.to_string()))
         },
-        Some(&"copy") => {
-            let field = parse_vault_field(get_arg(1, "field")?)?;
-            Ok(VaultCommand::Copy(field))
+        Some(&"copy" | &"cp") => {
+            let service = get_arg(1, "service")?;
+            let field = parse_vault_field(get_arg(2, "field")?)?;
+            Ok(VaultCommand::Copy(service.to_string(), field))
         },
-        Some(&"search") => {
-            let query = get_arg(1, "query")?;
-            Ok(VaultCommand::Search(query.to_string()))
-        },
-        Some(&"destroy") => Ok(VaultCommand::Destroy),
+        Some(&"panic") => Ok(VaultCommand::Panic),
+        Some(&"destroy" | &"wipe") => Ok(VaultCommand::Destroy),
         _ => return Err(AppError::InvalidCommand),
     };
     Ok(Command::Vault(sub_cmd?))

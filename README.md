@@ -16,10 +16,10 @@ Passman is a command-line password manager that enables multiple users to secure
 
 ## ✨ Features
 
+- ✅ Credentials stored locally in encrypted vaults
 - 👥 Multi-user support with separate vaults
-- 🛠️ Password generator with customizable rules
-- 🔍 Password strength analyzer
-- 🔎 Search and filter credentials
+- 📋 Copy credentials to clipboard
+- 🛠️ Password generator and strength analyzer
 - 🚫 No internet connection required
 
 ## 🔑 Security
@@ -43,8 +43,8 @@ Passman is a command-line password manager that enables multiple users to secure
   vault add <service> <username> <password>  > Add new credentials to the vault
   vault update <service> <field <value>      > Update a specific field of credentials 
   vault delete <service>                     > Delete credentials
-  vault copy <field>                         > Copy a specific field to the clipboard
-  vault search <query>                       > Search in the vault by query
+  vault copy <service> <field>               > Copy a specific field to the clipboard
+  vault panic                                > Clears clipboard, closes vault, clears screen and exits the program
   vault destroy                              > Delete vault
   analyze <password>                         > Analyze the strength of a password
   generate <length> [-symbols] [-copy] [-avoid-ambiguous]
