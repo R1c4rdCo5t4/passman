@@ -46,7 +46,7 @@ pub fn decrypt_vault(
     let decrypted_data = cipher.decrypt(
         GenericArray::from_slice(&nonce_bytes),
         ciphertext_bytes.as_ref()
-    ).map_err(|e| "Wrong vault password")?;
+    ).map_err(|_| "Wrong vault password")?;
 
     serde_json::from_slice(&decrypted_data)
         .map_err(|e| format!("Deserialization failed: {}", e))

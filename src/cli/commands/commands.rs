@@ -77,9 +77,9 @@ fn vault_cmd(command: Vault, state: &mut AppState) -> Result {
         }
         Vault::Close => close_vault(state),
         Vault::List => list_vaults(),
-        Vault::Show(_, _) => {
+        Vault::Show(_, unmask) => {
             in_vault(state)?;
-            show_vault(state)
+            show_vault(unmask, state)
         }
         Vault::Add(service, username, password) => {
             in_vault(state)?;

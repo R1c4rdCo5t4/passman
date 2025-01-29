@@ -2,7 +2,7 @@ use chrono::{Duration, Utc};
 use secrecy::{ExposeSecret, SecretBox};
 use zeroize::Zeroize;
 use crate::services::vault::constants::SESSION_TTL;
-use crate::services::vault::models::PasswordEntry;
+use crate::services::vault::models::{PasswordEntry, PasswordEntryDebug};
 use crate::services::vault::vault::VaultManager;
 use crate::state::{AppState, Session};
 
@@ -47,9 +47,9 @@ pub fn add_to_vault(service: &str, username: &str, password: &str, state: &mut A
     VaultManager::save(&session.name, &session.secret, &session.vault).expect("Failed to save vault");
 }
 
-pub fn show_vault(state: &mut AppState) {
+pub fn show_vault(unmask: bool, state: &mut AppState) {
     for entry in state.session.as_mut().unwrap().vault.entries.iter() {
-        println!("{:?}", entry);
+        println!("{:?}", PasswordEntryDebug { entry, unmask });
     }
 }
 

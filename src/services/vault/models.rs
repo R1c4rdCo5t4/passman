@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use zeroize::Zeroize;
-use secrecy::SecretBox;
+use secrecy::{ExposeSecret, SecretBox};
+use std::fmt;
+use colored::Colorize;
 
 #[derive(Serialize, Deserialize)]
 pub struct Vault {
@@ -30,6 +32,38 @@ impl Zeroize for PasswordEntry {
         self.password = SecretBox::new(Box::from(String::new()));
     }
 }
+
+pub struct PasswordEntryDebug<'a> {
+    pub(crate) entry: &'a PasswordEntry,
+    pub(crate) unmask: bool,
+}
+
+impl PasswordEntry {
+    pub fn unmask(&self) -> PasswordEntryDebug {
+        PasswordEntryDebug { entry: self, unmask: true }
+    }
+}
+
+impl fmt::Debug for PasswordEntryDebug<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let password_str = if self.unmask {
+            self.entry.password.expose_secret().to_string()
+        } else {
+            "<hidden>".to_string()
+        };
+        write!(
+            f,
+            "{}\n  {} {}\n  {} {}\n",
+            self.entry.service.bold().bright_white(),
+            "Username:".italic(),
+            self.entry.username.white(),
+            "Password:".italic(),
+            password_str.white(),
+        )
+    }
+}
+
+
 
 #[derive(Serialize, Deserialize)]
 pub(crate) struct VaultFile {

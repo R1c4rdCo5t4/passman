@@ -1,11 +1,12 @@
 use std::io;
 use std::io::Write;
 use std::process::Command;
+use colored::Colorize;
 
 pub fn print_prefix(vault: Option<&str>) {
     match vault {
-        Some(vault) => print!("{}@passman $ ", vault),
-        None => print!("passman $ "),
+        Some(vault) => print!("{}", format!("{}@passman $ ", vault).bright_cyan()),
+        None => print!("{}", "passman $ ".bright_cyan()),
     }
     io::stdout().flush().expect("Failed to flush stdout");
 }

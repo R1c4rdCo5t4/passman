@@ -24,8 +24,8 @@ pub fn parse_cmd(input: &str) -> Result<Command, &'static str> {
                 Some(&"close") => Ok(Vault::Close),
                 Some(&"list") => Ok(Vault::List),
                 Some(&"show") => {
-                    let mask = args.contains(&"-m") || args.contains(&"-mask");
-                    Ok(Vault::Show(snd, mask))
+                    let unmask = args.contains(&"-unmask");
+                    Ok(Vault::Show(snd, unmask))
                 },
                 Some(&"add") => {
                     match (snd, thd, fth) {
