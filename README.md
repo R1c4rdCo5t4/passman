@@ -8,8 +8,6 @@
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![GitHub repo size](https://img.shields.io/github/repo-size/R1c4rdCo5t4/passman)
 
-Passman is a command-line password manager that enables multiple users to securely store and manage encrypted credentials locally. Passwords are stored in vaults that can only be accessed with the vault's master password.
-
 </div>
 
 ---
