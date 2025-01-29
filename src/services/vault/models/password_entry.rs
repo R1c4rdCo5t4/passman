@@ -1,21 +1,8 @@
-use serde::{Deserialize, Serialize};
-use zeroize::Zeroize;
 use secrecy::{ExposeSecret, SecretBox};
 use std::fmt;
 use colored::Colorize;
-
-#[derive(Serialize, Deserialize)]
-pub struct Vault {
-    pub entries: Vec<PasswordEntry>,
-}
-
-impl Zeroize for Vault {
-    fn zeroize(&mut self) {
-        self.entries.iter_mut().for_each(|entry| {
-            entry.zeroize();
-        });
-    }
-}
+use serde::{Deserialize, Serialize};
+use zeroize::Zeroize;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PasswordEntry {
@@ -61,15 +48,6 @@ impl fmt::Debug for PasswordEntryDebug<'_> {
             password_str.white(),
         )
     }
-}
-
-
-
-#[derive(Serialize, Deserialize)]
-pub(crate) struct VaultFile {
-    pub(crate) salt: String,
-    pub(crate) nonce: String,
-    pub(crate) ciphertext: String,
 }
 
 mod secret_serde {

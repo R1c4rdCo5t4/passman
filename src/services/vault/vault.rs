@@ -2,7 +2,8 @@ use std::path::PathBuf;
 use directories::ProjectDirs;
 use std::fs::{self};
 use secrecy::SecretBox;
-use super::models::{Vault, VaultFile};
+use crate::services::vault::models::vault::Vault;
+use crate::services::vault::models::vault_file::VaultFile;
 use super::crypto::{self};
 
 pub struct VaultManager;

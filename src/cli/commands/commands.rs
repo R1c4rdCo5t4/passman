@@ -1,12 +1,13 @@
 use std::fs;
 use secrecy::SecretBox;
-use crate::cli::commands::enums::{Command, Vault};
+use crate::cli::commands::models::{Command, VaultCommand};
 use crate::cli::stdin::{read_line_with};
 use crate::cli::stdout::clear_console;
 use crate::services::vault::operations::{add_to_vault, close_vault, create_vault, in_vault, list_vaults, open_vault, show_vault, vault_exists};
 use crate::state::{AppState};
 
-type Result = std::result::Result<(), &'static str>;
+const HELP_FILE_PATH: &str = "HELP.txt";
+type Result = std::result::Result<Option<String>, &'static str>;
 
 pub fn execute_cmd(cmd: Command, state: &mut AppState) -> Result {
     match cmd {
@@ -25,11 +26,11 @@ fn exit() -> Result {
 
 fn clear() -> Result {
     clear_console();
-    Ok(())
+    Ok(None)
 }
 
 fn help(cmd: Option<String>) -> Result {
-    let help_text = fs::read_to_string("HELP.txt")
+    let help_text = fs::read_to_string(HELP_FILE_PATH)
         .expect("Failed to read help file");
 
     match cmd {
@@ -45,22 +46,21 @@ fn help(cmd: Option<String>) -> Result {
                 .collect();
 
             if lines.is_empty() {
-                return Err("No help available for provided command");
+                Err("No help available for provided command")
             } else {
-                println!("{}", lines.join("\n"));
+                Ok(Some(lines.join("\n")))
             }
         }
         None => {
-            println!("{}", help_text);
+            Ok(Some(help_text))
         }
     }
-    Ok(())
 }
 
 
-fn vault_cmd(command: Vault, state: &mut AppState) -> Result {
+fn vault_cmd(command: VaultCommand, state: &mut AppState) -> Result {
     match command {
-        Vault::New(name) => {
+        VaultCommand::New(name) => {
             let password = read_line_with("Choose master password for vault: ");
             let confirm_password = read_line_with("Confirm master password: ");
             if password != confirm_password {
@@ -69,39 +69,41 @@ fn vault_cmd(command: Vault, state: &mut AppState) -> Result {
             let secret = SecretBox::new(Box::from(String::from(password)));
             create_vault(&name, &secret);
         }
-        Vault::Open(name) => {
+        VaultCommand::Open(name) => {
             vault_exists(&name)?;
             let password = read_line_with("Enter master password for vault: ");
             let secret = SecretBox::new(Box::from(String::from(password)));
             open_vault(&name, &secret, state);
         }
-        Vault::Close => close_vault(state),
-        Vault::List => list_vaults(),
-        Vault::Show(_, unmask) => {
+        VaultCommand::Close => close_vault(state),
+        VaultCommand::List => list_vaults(),
+        VaultCommand::Show(_, unmask) => {
             in_vault(state)?;
             show_vault(unmask, state)
         }
-        Vault::Add(service, username, password) => {
+        VaultCommand::Add(service, username, password) => {
             in_vault(state)?;
             add_to_vault(&service, &username, &password, state);
         }
-        Vault::Update(_, _, _) => {
+        VaultCommand::Update(_, _, _) => {
             in_vault(state)?;
         }
-        Vault::Delete(_) => {
+        VaultCommand::Delete(_) => {
             in_vault(state)?;
         }
-        Vault::Copy(_) => {
+        VaultCommand::Copy(_) => {
+            // if vec!["username", ""]
+            in_vault(state)?;
+
+        }
+        VaultCommand::Search(_) => {
             in_vault(state)?;
         }
-        Vault::Search(_) => {
-            in_vault(state)?;
-        }
-        Vault::Destroy => {
+        VaultCommand::Destroy => {
             in_vault(state)?;
         }
     }
-    Ok(())
+    Ok(None)
 }
 
 fn generate_pwd() -> Result {
@@ -112,3 +114,8 @@ fn analyze_pwd(_: String) -> Result {
     todo!()
 }
 
+// pub fn show_usage(cmd: &str) {
+//     let help_line = read_help_file(Some(cmd.to_string())).unwrap();
+//     let usage = help_line.split(">").collect::<Vec<&str>>()[1].trim().to_string();
+//     println!("Usage: {}", usage)
+// }

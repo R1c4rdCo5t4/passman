@@ -1,7 +1,8 @@
-use passman::cli::commands::commands::execute_cmd;
+use passman::cli::commands::commands::{execute_cmd};
 use passman::cli::commands::parser::{parse_cmd};
 use passman::cli::stdin::read_line;
 use passman::cli::stdout::{clear_console, print_prefix};
+use passman::services::error::AppError;
 use passman::state::AppState;
 
 fn main() {
@@ -17,11 +18,17 @@ fn main() {
         match parse_cmd(&line) {
             Ok(cmd) => {
                 match execute_cmd(cmd, &mut state) {
-                    Ok(_) => {}
-                    Err(err) => println!("{}", err)
+                    Ok(msg) => if msg.is_some() {
+                        println!("{}", msg.unwrap());
+                    }
+                    Err(err) => eprintln!("{}", err)
                 }
             },
-            Err(err) => println!("{}", err),
+            Err(err) => match err {
+                AppError::InvalidCommand => eprintln!("Invalid command: {}", line),
+                AppError::InvalidArgument(arg) => eprintln!("Invalid argument: {}", arg),
+                AppError::MissingArgument(arg) => eprintln!("Missing argument: {}", arg),
+            }
         }
     }
 }

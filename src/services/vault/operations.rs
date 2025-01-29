@@ -2,7 +2,7 @@ use chrono::{Duration, Utc};
 use secrecy::{ExposeSecret, SecretBox};
 use zeroize::Zeroize;
 use crate::services::vault::constants::SESSION_TTL;
-use crate::services::vault::models::{PasswordEntry, PasswordEntryDebug};
+use crate::services::vault::models::password_entry::{PasswordEntry, PasswordEntryDebug};
 use crate::services::vault::vault::VaultManager;
 use crate::state::{AppState, Session};
 

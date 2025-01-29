@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
 use secrecy::SecretBox;
-use crate::services::vault::models::Vault;
+use crate::services::vault::models::vault::Vault;
 
 pub struct AppState {
     pub session: Option<Session>
