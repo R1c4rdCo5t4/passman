@@ -109,11 +109,15 @@ fn vault_cmd(command: VaultCommand, state: &mut AppState) -> CommandResult {
         }
         VaultCommand::Update(service, field, value) => {
             in_vault(state)?;
-            update_vault(&service, &field, &value, state)?;
+            if confirmation_prompt() {
+                update_vault(&service, &field, &value, state)?;
+            }
         }
         VaultCommand::Delete(service) => {
             in_vault(state)?;
-            delete_from_vault(&service, state)?;
+            if confirmation_prompt() {
+                delete_from_vault(&service, state)?;
+            }
         }
         VaultCommand::Copy(service, field) => {
             in_vault(state)?;
@@ -131,9 +135,16 @@ fn vault_cmd(command: VaultCommand, state: &mut AppState) -> CommandResult {
         }
         VaultCommand::Destroy => {
             in_vault(state)?;
-            delete_vault(state);
-            close_vault(state);
+            if confirmation_prompt() {
+                delete_vault(state);
+                close_vault(state);
+            }
         }
     }
     Ok(None)
+}
+
+fn confirmation_prompt() -> bool {
+    let input = read_line_with("Are you sure? (y/n): ").to_lowercase();
+    input == "y" || input == "yes"
 }

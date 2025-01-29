@@ -78,7 +78,7 @@ pub fn add_to_vault(service: &str, username: &str, password: &str, state: &mut A
 
 pub fn update_vault(service: &str, field: &VaultField, value: &str, state: &mut AppState) -> Result<(), &'static str> {
     let session = state.session.as_mut().unwrap();
-    let mut entry = get_vault_entry(service, &mut session.vault)?;
+    let entry = get_vault_entry(service, &mut session.vault)?;
     match field {
         VaultField::Username => entry.username = String::from(value),
         VaultField::Password => entry.password = SecretBox::new(Box::from(String::from(value))),
@@ -89,8 +89,8 @@ pub fn update_vault(service: &str, field: &VaultField, value: &str, state: &mut 
 
 pub fn delete_from_vault(service: &str, state: &mut AppState) -> Result<(), &'static str> {
     let session = state.session.as_mut().unwrap();
-    let entry = get_vault_entry(service, &mut session.vault)?;
-    session.vault.entries.retain(|e| e.service != entry.service);
+    let service_name = get_vault_entry(service, &mut session.vault)?.service.clone();
+    session.vault.entries.retain(|e| e.service != service_name);
     Ok(())
 }
 
@@ -111,16 +111,9 @@ pub fn vault_exists(name: &str) -> Result<(), &'static str> {
     }
 }
 
-fn get_vault_entry(service: &str, vault: &mut Vault) -> Result<PasswordEntry, &'static str> {
-    let entry_opt = vault.entries.iter_mut().find(|entry| entry.service == service);
-    if entry_opt.is_none() {
-        Err("Service not found")
-    } else {
-        let entry = entry_opt.unwrap();
-        Ok(PasswordEntry {
-            service: entry.service.clone(),
-            username: entry.username.clone(),
-            password: SecretBox::new(Box::from(entry.password.expose_secret().clone())),
-        })
-    }
+fn get_vault_entry<'a>(service: &str, vault: &'a mut Vault) -> Result<&'a mut PasswordEntry, &'static str> {
+    vault.entries
+        .iter_mut()
+        .find(|entry| entry.service == service)
+        .ok_or("Service not found")
 }
