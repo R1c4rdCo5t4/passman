@@ -1,8 +1,33 @@
-# Passman
+<div align="center">
 
-Simple CLI password manager build using Rust that allows multiple users to store encrypted passwords locally.
+# Passman 🔐
 
-![](https://skillicons.dev/icons?i=rust)
+**Secure multi-user CLI password manager with local encrypted storage**
+
+[![Rust](https://img.shields.io/badge/Built_with-Rust-orange?logo=rust)](https://www.rust-lang.org/)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+![GitHub repo size](https://img.shields.io/github/repo-size/R1c4rdCo5t4/passman)
+
+Passman is a command-line password manager that enables multiple users to securely store and manage encrypted credentials locally. Passwords are stored in vaults that can only be accessed with the vault's master password.
+
+</div>
+
+---
+
+## ✨ Features
+
+- 👥 Multi-user support with separate vaults
+- 🛠️ Password generator with customizable rules
+- 🔍 Password strength analyzer
+- 🔎 Search and filter credentials
+- 🚫 No internet connection required
+
+## 🔑 Security
+
+- 🔒 AES-256-GCM-SIV encrypted vault storage
+- 🔐 Argon2id key derivation
+- 🧹 Zeroized memory for sensitive data
+- 👤 Session management with TTL expiration
 
 ## Commands
 
@@ -26,7 +51,9 @@ Simple CLI password manager build using Rust that allows multiple users to store
                                              > Generate a new password
 ```
 
-## How to run 
+---
+
+## Running
 
 ```
 cargo run
