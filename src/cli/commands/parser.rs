@@ -37,8 +37,8 @@ pub fn parse_vault_cmd(args: Vec<&str>) -> Result<Command, AppError> {
         Some(&"list" | &"lst") => Ok(VaultCommand::List),
         Some(&"show") => {
             let service = args.get(1).map(|s| s.to_string());
-            let unmask = args.contains(&"-unmask");
-            Ok(VaultCommand::Show(service, unmask))
+            let expose = ["-expose", "-unmask"].iter().any(|arg| args.contains(arg));
+            Ok(VaultCommand::Show(service, expose))
         },
         Some(&"add") => {
             let service = get_arg(1, "service")?.to_string();
@@ -58,7 +58,11 @@ pub fn parse_vault_cmd(args: Vec<&str>) -> Result<Command, AppError> {
         },
         Some(&"copy" | &"cp") => {
             let service = get_arg(1, "service")?;
-            let field = parse_vault_field(get_arg(2, "field")?)?;
+            let field_opt = args.get(2);
+            let field = match field_opt {
+                Some(f) => parse_vault_field(f)?,
+                None => VaultField::Password,
+            };
             Ok(VaultCommand::Copy(service.to_string(), field))
         },
         Some(&"panic") => Ok(VaultCommand::Panic),

@@ -47,9 +47,14 @@ pub fn add_to_vault(service: &str, username: &str, password: &str, state: &mut A
     VaultManager::save(&session.name, &session.secret, &session.vault).expect("Failed to save vault");
 }
 
-pub fn show_vault(unmask: bool, state: &mut AppState) {
-    for entry in state.session.as_mut().unwrap().vault.entries.iter() {
-        println!("{:?}", PasswordEntryDebug { entry, unmask });
+pub fn show_vault(service: Option<String>, expose: bool, state: &mut AppState) {
+    let entries = state.session.as_mut().unwrap().vault.entries.iter();
+    let filtered: Vec<&PasswordEntry> = match service {
+        Some(s) => entries.filter(|entry| entry.service == s).collect(),
+        None => entries.collect(),
+    };
+    for entry in filtered {
+        println!("{:?}", PasswordEntryDebug { entry, expose });
     }
 }
 

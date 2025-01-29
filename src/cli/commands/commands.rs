@@ -2,7 +2,7 @@ use std::fs;
 use arboard::Clipboard;
 use secrecy::{ExposeSecret, SecretBox};
 use crate::cli::commands::models::{Command, VaultCommand, VaultField};
-use crate::cli::stdin::{read_line_with};
+use crate::cli::stdin::{read_line_hidden_with, read_line_with};
 use crate::cli::stdout::clear_console;
 use crate::services::vault::operations::{add_to_vault, close_vault, create_vault, in_vault, list_vaults, open_vault, show_vault, vault_exists};
 use crate::state::{AppState};
@@ -62,8 +62,8 @@ fn help(cmd: Option<String>) -> Result {
 fn vault_cmd(command: VaultCommand, state: &mut AppState) -> Result {
     match command {
         VaultCommand::New(name) => {
-            let password = read_line_with("Choose master password for vault: ");
-            let confirm_password = read_line_with("Confirm master password: ");
+            let password = read_line_hidden_with("Choose master password for vault: ");
+            let confirm_password = read_line_hidden_with("Confirm master password: ");
             if password != confirm_password {
                 return Err("Passwords don't match");
             }
@@ -72,15 +72,15 @@ fn vault_cmd(command: VaultCommand, state: &mut AppState) -> Result {
         }
         VaultCommand::Open(name) => {
             vault_exists(&name)?;
-            let password = read_line_with("Enter master password for vault: ");
+            let password = read_line_hidden_with("Enter master password for vault: ");
             let secret = SecretBox::new(Box::from(String::from(password)));
             open_vault(&name, &secret, state);
         }
         VaultCommand::Close => close_vault(state),
         VaultCommand::List => list_vaults(),
-        VaultCommand::Show(_, unmask) => {
+        VaultCommand::Show(service, expose) => {
             in_vault(state)?;
-            show_vault(unmask, state)
+            show_vault(service, expose, state)
         }
         VaultCommand::Add(service, username, password) => {
             in_vault(state)?;

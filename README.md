@@ -32,14 +32,14 @@ Passman is a command-line password manager that enables multiple users to secure
 ## Commands
 
 ```
-  help [<command>]                           > Get detailed help for a specific command
+  help [<command>]                           > Get this message or help for specific commands
   clear                                      > Clear the screen
   exit                                       > Exit the program
   vault new <name>                           > Create a new vault
   vault open <name>                          > Enter a vault
   vault close                                > Exit the current vault
   vault list                                 > List all vaults
-  vault show [<service>] [-mask]             > Show all or specific credentials in the vault (mask hides the password)
+  vault show [<service>] [-expose]           > Show all or specific credentials in the vault
   vault add <service> <username> <password>  > Add new credentials to the vault
   vault update <service> <field <value>      > Update a specific field of credentials 
   vault delete <service>                     > Delete credentials

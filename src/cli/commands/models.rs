@@ -1,26 +1,30 @@
 use std::fmt;
 
+type Name = String;
+type Password = String;
+type Service = String;
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum Command {
-    Help(Option<String>),
+    Help(Option<Name>),
     Clear,
     Exit,
     Vault(VaultCommand),
-    Analyze(String),
+    Analyze(Password),
     Generate, // TODO
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum VaultCommand {
-    New(String),
-    Open(String),
+    New(Name),
+    Open(Name),
     Close,
     List,
-    Show(Option<String>, bool),
-    Add(String, String, String),
-    Update(String, VaultField, String),
-    Delete(String),
-    Copy(String, VaultField),
+    Show(Option<Service>, bool),
+    Add(Service, Name, Password),
+    Update(Service, VaultField, String),
+    Delete(Service),
+    Copy(Service, VaultField),
     Panic,
     Destroy,
 }

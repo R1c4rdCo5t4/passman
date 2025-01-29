@@ -22,18 +22,18 @@ impl Zeroize for PasswordEntry {
 
 pub struct PasswordEntryDebug<'a> {
     pub(crate) entry: &'a PasswordEntry,
-    pub(crate) unmask: bool,
+    pub(crate) expose: bool,
 }
 
 impl PasswordEntry {
-    pub fn unmask(&self) -> PasswordEntryDebug {
-        PasswordEntryDebug { entry: self, unmask: true }
+    pub fn expose(&self) -> PasswordEntryDebug {
+        PasswordEntryDebug { entry: self, expose: true }
     }
 }
 
 impl fmt::Debug for PasswordEntryDebug<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let password_str = if self.unmask {
+        let password_str = if self.expose {
             self.entry.password.expose_secret().to_string()
         } else {
             "<hidden>".to_string()
