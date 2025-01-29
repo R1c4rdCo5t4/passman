@@ -3,7 +3,7 @@ use secrecy::SecretBox;
 use crate::cli::commands::enums::{Command, Vault};
 use crate::cli::stdin::{read_line_with};
 use crate::cli::stdout::clear_console;
-use crate::services::vault::operations::{add_to_vault, close_vault, create_vault, open_vault, show_vault};
+use crate::services::vault::operations::{add_to_vault, close_vault, create_vault, in_vault, list_vaults, open_vault, show_vault, vault_exists};
 use crate::state::{AppState};
 
 type Result = std::result::Result<(), &'static str>;
@@ -70,36 +70,35 @@ fn vault_cmd(command: Vault, state: &mut AppState) -> Result {
             create_vault(&name, &secret);
         }
         Vault::Open(name) => {
+            vault_exists(&name)?;
             let password = read_line_with("Enter master password for vault: ");
             let secret = SecretBox::new(Box::from(String::from(password)));
             open_vault(&name, &secret, state);
         }
-        Vault::Close => {
-            close_vault(state)
-        }
-        Vault::List => {}
+        Vault::Close => close_vault(state),
+        Vault::List => list_vaults(),
         Vault::Show(_, _) => {
-            check_vault(state)?;
+            in_vault(state)?;
             show_vault(state)
         }
         Vault::Add(service, username, password) => {
-            check_vault(state)?;
+            in_vault(state)?;
             add_to_vault(&service, &username, &password, state);
         }
         Vault::Update(_, _, _) => {
-            check_vault(state)?;
+            in_vault(state)?;
         }
         Vault::Delete(_) => {
-            check_vault(state)?;
+            in_vault(state)?;
         }
         Vault::Copy(_) => {
-            check_vault(state)?;
+            in_vault(state)?;
         }
         Vault::Search(_) => {
-            check_vault(state)?;
+            in_vault(state)?;
         }
         Vault::Destroy => {
-            check_vault(state)?;
+            in_vault(state)?;
         }
     }
     Ok(())
@@ -113,10 +112,3 @@ fn analyze_pwd(_: String) -> Result {
     todo!()
 }
 
-fn check_vault(state: &AppState) -> Result {
-    if state.session.is_none() {
-        Err("No vault opened")
-    } else {
-        Ok(())
-    }
-}

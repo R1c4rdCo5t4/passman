@@ -52,3 +52,27 @@ pub fn show_vault(state: &mut AppState) {
         println!("{:?}", entry);
     }
 }
+
+pub fn list_vaults() {
+    let vaults = VaultManager::list().expect("Failed to list vaults");
+    for vault in vaults.iter() {
+        println!("{}", vault);
+    }
+}
+
+pub fn in_vault(state: &AppState) -> Result<(), &'static str> {
+    if state.session.is_some() {
+        Ok(())
+    } else {
+        Err("No vault opened")
+    }
+}
+
+
+pub fn vault_exists(name: &str) -> Result<(), &'static str> {
+    if VaultManager::exists(&name) {
+        Ok(())
+    } else {
+        Err("Vault does not exist")
+    }
+}
