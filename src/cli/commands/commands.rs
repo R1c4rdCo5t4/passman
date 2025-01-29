@@ -99,7 +99,7 @@ fn vault_cmd(command: VaultCommand, state: &mut AppState) -> CommandResult {
         VaultCommand::List => list_vaults(),
         VaultCommand::Show(service, expose) => {
             in_vault(state)?;
-            show_vault(service, expose, state)
+            show_vault(service, expose, state)?
         }
         VaultCommand::Add(service) => {
             in_vault(state)?;

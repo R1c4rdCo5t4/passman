@@ -38,15 +38,19 @@ pub fn close_vault(state: &mut AppState) {
     }
 }
 
-pub fn show_vault(service: Option<String>, expose: bool, state: &mut AppState) {
+pub fn show_vault(service: Option<String>, expose: bool, state: &mut AppState) -> Result<(), &'static str> {
     let entries = state.session.as_mut().unwrap().vault.entries.iter();
-    let filtered: Vec<&PasswordEntry> = match service {
+    let filtered: Vec<&PasswordEntry> = match service.clone() {
         Some(s) => entries.filter(|entry| entry.service == s).collect(),
         None => entries.collect(),
     };
+    if service.is_some() && filtered.is_empty() {
+        return Err("Service not found");
+    }
     for entry in filtered {
         println!("{:?}", PasswordEntryDebug { entry, expose });
     }
+    Ok(())
 }
 
 pub fn delete_vault(state: &mut AppState) {

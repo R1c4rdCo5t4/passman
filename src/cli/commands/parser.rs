@@ -5,7 +5,9 @@ pub fn parse_cmd(input: &str) -> Result<Command, AppError> {
     let trimmed = input.trim();
     let mut parts = trimmed.split_whitespace();
     let cmd = parts.next();
-    let args = parts.collect::<Vec<&str>>();
+    let collected = parts.collect::<Vec<&str>>();
+    let args: Vec<&str> = collected.iter().filter(|arg| !arg.starts_with('-')).cloned().collect();
+    let options: Vec<&str> = collected.iter().filter(|arg| arg.starts_with('-')).cloned().collect();
 
     match cmd {
         Some("help" | "h" | "?") => Ok(Command::Help(args.join(" ").into())),
@@ -17,12 +19,12 @@ pub fn parse_cmd(input: &str) -> Result<Command, AppError> {
             Ok(Command::Analyze(password.to_string()))
         },
         Some("panic") => Ok(Command::Panic),
-        Some("vault" | "vlt") => parse_vault_cmd(args),
+        Some("vault" | "vlt") => parse_vault_cmd(args, options),
         _ => Err(AppError::InvalidCommand),
     }
 }
 
-pub fn parse_vault_cmd(args: Vec<&str>) -> Result<Command, AppError> {
+pub fn parse_vault_cmd(args: Vec<&str>, options: Vec<&str>) -> Result<Command, AppError> {
     let get_arg = |idx: usize, name: &str| args.get(idx)
         .map(|s| *s).ok_or(AppError::MissingArgument(String::from(name)));
     let sub_cmd = match args.first() {
@@ -38,7 +40,7 @@ pub fn parse_vault_cmd(args: Vec<&str>) -> Result<Command, AppError> {
         Some(&"list" | &"lst") => Ok(VaultCommand::List),
         Some(&"show") => {
             let service = args.get(1).map(|s| s.to_string());
-            let expose = ["-expose", "-unmask"].iter().any(|arg| args.contains(arg));
+            let expose = ["-expose", "-unmask"].iter().any(|opt| options.contains(opt));
             Ok(VaultCommand::Show(service, expose))
         },
         Some(&"add") => {
