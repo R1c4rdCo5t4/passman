@@ -1,36 +1,55 @@
 use std::fs;
-use arboard::Clipboard;
 use secrecy::{ExposeSecret, SecretBox};
 use crate::cli::commands::models::{Command, VaultCommand, VaultField};
-use crate::cli::stdin::{read_line_hidden_with, read_line_with};
-use crate::cli::stdout::clear_console;
-use crate::services::vault::operations::{add_to_vault, close_vault, create_vault, in_vault, list_vaults, open_vault, show_vault, vault_exists};
+use crate::cli::stdin::{read_line, read_line_hidden_with, read_line_with};
+use crate::cli::stdout::{clear_clipboard, clear_console, copy_to_clipboard};
+use crate::services::vault::operations::{add_to_vault, close_vault, create_vault, delete_from_vault, delete_vault, in_vault, list_vaults, open_vault, show_vault, update_vault, vault_exists};
 use crate::state::{AppState};
 
 const HELP_FILE_PATH: &str = "HELP.txt";
-type Result = std::result::Result<Option<String>, &'static str>;
+type CommandResult = Result<Option<String>, &'static str>;
 
-pub fn execute_cmd(cmd: Command, state: &mut AppState) -> Result {
+pub fn execute_cmd(cmd: Command, state: &mut AppState) -> CommandResult {
     match cmd {
         Command::Exit => exit(),
         Command::Help(cmd) => help(cmd),
         Command::Clear => clear(),
-        Command::Analyze(pwd) => analyze_pwd(pwd),
-        Command::Generate => generate_pwd(),
+        Command::Analyze(pwd) => analyze_password(pwd),
+        Command::Generate => generate_password(),
         Command::Vault(cmd) => vault_cmd(cmd, state),
+        Command::Panic => panic(state),
     }
 }
 
-fn exit() -> Result {
+fn exit() -> CommandResult {
+    clear_console();
     std::process::exit(0);
 }
 
-fn clear() -> Result {
+fn clear() -> CommandResult {
     clear_console();
     Ok(None)
 }
 
-fn help(cmd: Option<String>) -> Result {
+fn panic(state: &mut AppState) -> CommandResult {
+    if state.session.is_some() { // if in vault
+        close_vault(state);
+    }
+    clear_clipboard();
+    clear_console();
+    exit()
+}
+
+fn generate_password() -> CommandResult {
+    todo!()
+}
+
+fn analyze_password(_: String) -> CommandResult {
+    todo!()
+}
+
+
+fn help(cmd: Option<String>) -> CommandResult {
     let help_text = fs::read_to_string(HELP_FILE_PATH)
         .expect("Failed to read help file");
 
@@ -59,7 +78,7 @@ fn help(cmd: Option<String>) -> Result {
 }
 
 
-fn vault_cmd(command: VaultCommand, state: &mut AppState) -> Result {
+fn vault_cmd(command: VaultCommand, state: &mut AppState) -> CommandResult {
     match command {
         VaultCommand::New(name) => {
             let password = read_line_hidden_with("Choose master password for vault: ");
@@ -82,15 +101,19 @@ fn vault_cmd(command: VaultCommand, state: &mut AppState) -> Result {
             in_vault(state)?;
             show_vault(service, expose, state)
         }
-        VaultCommand::Add(service, username, password) => {
+        VaultCommand::Add(service) => {
             in_vault(state)?;
+            let username = read_line_with("Username: ");
+            let password = read_line_hidden_with("Password: ");
             add_to_vault(&service, &username, &password, state);
         }
-        VaultCommand::Update(_, _, _) => {
+        VaultCommand::Update(service, field, value) => {
             in_vault(state)?;
+            update_vault(&service, &field, &value, state)?;
         }
-        VaultCommand::Delete(_) => {
+        VaultCommand::Delete(service) => {
             in_vault(state)?;
+            delete_from_vault(&service, state)?;
         }
         VaultCommand::Copy(service, field) => {
             in_vault(state)?;
@@ -99,28 +122,18 @@ fn vault_cmd(command: VaultCommand, state: &mut AppState) -> Result {
                 return Err("Service not found");
             }
             let entry = entry_opt.unwrap();
-            let mut clipboard = Clipboard::new().expect("Failed to initialize clipboard");
             let text = match field {
                 VaultField::Username => entry.username.clone(),
                 VaultField::Password => entry.password.expose_secret().clone(),
             };
-            clipboard.set_text(text).expect("Failed to copy to clipboard");
+            copy_to_clipboard(text);
             return Ok(Some(format!("Copied {} to clipboard", field.to_string().to_lowercase())))
-        }
-        VaultCommand::Panic => {
-            in_vault(state)?;
         }
         VaultCommand::Destroy => {
             in_vault(state)?;
+            delete_vault(state);
+            close_vault(state);
         }
     }
     Ok(None)
-}
-
-fn generate_pwd() -> Result {
-    todo!()
-}
-
-fn analyze_pwd(_: String) -> Result {
-    todo!()
 }

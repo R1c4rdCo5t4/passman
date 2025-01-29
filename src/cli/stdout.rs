@@ -1,6 +1,7 @@
 use std::io;
 use std::io::Write;
 use std::process::Command;
+use arboard::Clipboard;
 use colored::Colorize;
 
 pub fn print_prefix(vault: Option<&str>) {
@@ -22,4 +23,13 @@ pub fn clear_console() {
             .status()
             .expect("Failed to clear console");
     }
+}
+
+pub fn copy_to_clipboard(text: String) {
+    let mut clipboard = Clipboard::new().expect("Failed to initialize clipboard");
+    clipboard.set_text(text).expect("Failed to copy to clipboard");
+}
+
+pub fn clear_clipboard() {
+    copy_to_clipboard(String::new());
 }

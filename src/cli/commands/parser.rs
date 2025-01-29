@@ -16,6 +16,7 @@ pub fn parse_cmd(input: &str) -> Result<Command, AppError> {
             let password = args.get(0).ok_or(AppError::MissingArgument(String::from("password")))?;
             Ok(Command::Analyze(password.to_string()))
         },
+        Some("panic") => Ok(Command::Panic),
         Some("vault" | "vlt") => parse_vault_cmd(args),
         _ => Err(AppError::InvalidCommand),
     }
@@ -42,9 +43,7 @@ pub fn parse_vault_cmd(args: Vec<&str>) -> Result<Command, AppError> {
         },
         Some(&"add") => {
             let service = get_arg(1, "service")?.to_string();
-            let username = get_arg(2, "username")?.to_string();
-            let password = get_arg(3, "password")?.to_string();
-            Ok(VaultCommand::Add(service, username, password))
+            Ok(VaultCommand::Add(service))
         },
         Some(&"update" | &"up") => {
             let service = get_arg(1, "service")?.to_string();
@@ -65,7 +64,6 @@ pub fn parse_vault_cmd(args: Vec<&str>) -> Result<Command, AppError> {
             };
             Ok(VaultCommand::Copy(service.to_string(), field))
         },
-        Some(&"panic") => Ok(VaultCommand::Panic),
         Some(&"destroy" | &"wipe") => Ok(VaultCommand::Destroy),
         _ => return Err(AppError::InvalidCommand),
     };

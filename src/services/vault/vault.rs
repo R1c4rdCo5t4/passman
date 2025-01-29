@@ -45,6 +45,11 @@ impl VaultManager {
             .collect()
     }
 
+    pub fn delete(name: &str) {
+        let path = Self::get_path(Option::from(name));
+        fs::remove_file(path).expect("Failed to delete vault file");
+    }
+
     pub fn exists(name: &str) -> bool {
         let path = Self::get_path(Option::from(name));
         path.exists()
@@ -59,6 +64,4 @@ impl VaultManager {
         }
         path
     }
-
-
 }

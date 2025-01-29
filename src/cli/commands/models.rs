@@ -10,6 +10,7 @@ pub enum Command {
     Clear,
     Exit,
     Vault(VaultCommand),
+    Panic,
     Analyze(Password),
     Generate, // TODO
 }
@@ -21,11 +22,10 @@ pub enum VaultCommand {
     Close,
     List,
     Show(Option<Service>, bool),
-    Add(Service, Name, Password),
+    Add(Service),
     Update(Service, VaultField, String),
     Delete(Service),
     Copy(Service, VaultField),
-    Panic,
     Destroy,
 }
 

@@ -40,12 +40,12 @@ Passman is a command-line password manager that enables multiple users to secure
   vault close                                > Exit the current vault
   vault list                                 > List all vaults
   vault show [<service>] [-expose]           > Show all or specific credentials in the vault
-  vault add <service> <username> <password>  > Add new credentials to the vault
+  vault add <service>                        > Add new credentials to the vault
   vault update <service> <field <value>      > Update a specific field of credentials 
   vault delete <service>                     > Delete credentials
   vault copy <service> <field>               > Copy a specific field to the clipboard
-  vault panic                                > Clears clipboard, closes vault, clears screen and exits the program
   vault destroy                              > Delete vault
+  panic                                > Clears clipboard, closes vault, clears screen and exits
   analyze <password>                         > Analyze the strength of a password
   generate <length> [-symbols] [-copy] [-avoid-ambiguous]
                                              > Generate a new password
