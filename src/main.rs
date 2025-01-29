@@ -4,8 +4,8 @@ use std::thread;
 use ctrlc::set_handler;
 use passman::cli::commands::commands::{execute_cmd};
 use passman::cli::commands::parser::{parse_cmd};
-use passman::cli::stdin::{read_line, read_line_with_prefix};
-use passman::cli::stdout::{clear_console, print_prefix};
+use passman::cli::stdin::{read_line_with_prefix};
+use passman::cli::stdout::{clear_console};
 use passman::services::error::AppError;
 use passman::state::AppState;
 
@@ -44,10 +44,6 @@ fn main() {
                                 if let Some(m) = msg {
                                     println!("{}", m);
                                 }
-                                let vault = state.session.as_ref().map(|s| s.name.clone());
-                                vault_tx.send(vault).unwrap_or_else(|e| {
-                                    eprintln!("Failed to send session update: {}", e);
-                                });
                             }
                             Err(err) => eprintln!("{}", err)
                         }
@@ -58,6 +54,10 @@ fn main() {
                         AppError::MissingArgument(arg) => eprintln!("Missing argument: {}", arg),
                     }
                 }
+                let vault = state.session.as_ref().map(|s| s.name.clone());
+                vault_tx.send(vault).unwrap_or_else(|e| {
+                    eprintln!("Failed to send session update: {}", e);
+                });
             }
             Err(_) => break
         }

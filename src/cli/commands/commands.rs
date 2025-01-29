@@ -1,7 +1,7 @@
 use std::fs;
 use secrecy::{ExposeSecret, SecretBox};
 use crate::cli::commands::models::{Command, VaultCommand, VaultField};
-use crate::cli::stdin::{read_line, read_line_hidden_with, read_line_with};
+use crate::cli::stdin::{read_line_hidden_with, read_line_with};
 use crate::cli::stdout::{clear_clipboard, clear_console, copy_to_clipboard};
 use crate::services::vault::operations::{add_to_vault, close_vault, create_vault, delete_from_vault, delete_vault, in_vault, list_vaults, open_vault, show_vault, update_vault, vault_exists};
 use crate::state::{AppState};

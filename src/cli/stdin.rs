@@ -22,8 +22,13 @@ pub fn read_line_with(content: &str) -> String {
 }
 
 pub fn read_line_with_prefix(vault: Option<&str>) -> String {
-    print_prefix(vault);
-    read_line()
+    loop {
+        print_prefix(vault);
+        let line = read_line();
+        if line.len() > 0 {
+            return line;
+        }
+    }
 }
 
 pub fn read_line_hidden_with(content: &str) -> String {
