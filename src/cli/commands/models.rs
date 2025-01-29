@@ -3,6 +3,7 @@ use std::fmt;
 type Name = String;
 type Password = String;
 type Service = String;
+type Copy = bool;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Command {
@@ -12,7 +13,7 @@ pub enum Command {
     Vault(VaultCommand),
     Panic,
     Analyze(Password),
-    Generate, // TODO
+    Generate(PasswordParameters, Copy)
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -42,4 +43,11 @@ impl fmt::Display for VaultField {
             VaultField::Password => write!(f, "password"),
         }
     }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PasswordParameters {
+    pub length: usize,
+    pub symbols: bool,
+    pub avoid_ambiguous: bool,
 }

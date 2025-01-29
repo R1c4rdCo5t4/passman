@@ -1,6 +1,6 @@
 use std::fs;
 use secrecy::{ExposeSecret, SecretBox};
-use crate::cli::commands::models::{Command, VaultCommand, VaultField};
+use crate::cli::commands::models::{Command, PasswordParameters, VaultCommand, VaultField};
 use crate::cli::stdin::{read_line_hidden_with, read_line_with};
 use crate::cli::stdout::{clear_clipboard, clear_console, copy_to_clipboard};
 use crate::services::vault::operations::{add_to_vault, close_vault, create_vault, delete_from_vault, delete_vault, in_vault, list_vaults, open_vault, show_vault, update_vault, vault_exists};
@@ -15,7 +15,7 @@ pub fn execute_cmd(cmd: Command, state: &mut AppState) -> CommandResult {
         Command::Help(cmd) => help(cmd),
         Command::Clear => clear(),
         Command::Analyze(pwd) => analyze_password(pwd),
-        Command::Generate => generate_password(),
+        Command::Generate(params, copy) => generate_password(params, copy),
         Command::Vault(cmd) => vault_cmd(cmd, state),
         Command::Panic => panic(state),
     }
@@ -40,7 +40,7 @@ fn panic(state: &mut AppState) -> CommandResult {
     exit()
 }
 
-fn generate_password() -> CommandResult {
+fn generate_password(_: PasswordParameters, _: bool) -> CommandResult {
     todo!()
 }
 
@@ -76,7 +76,6 @@ fn help(cmd: Option<String>) -> CommandResult {
         }
     }
 }
-
 
 fn vault_cmd(command: VaultCommand, state: &mut AppState) -> CommandResult {
     match command {

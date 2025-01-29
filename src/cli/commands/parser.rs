@@ -1,4 +1,4 @@
-use crate::cli::commands::models::{Command, VaultCommand, VaultField};
+use crate::cli::commands::models::{Command, PasswordParameters, VaultCommand, VaultField};
 use crate::services::error::AppError;
 
 pub fn parse_cmd(input: &str) -> Result<Command, AppError> {
@@ -8,14 +8,24 @@ pub fn parse_cmd(input: &str) -> Result<Command, AppError> {
     let collected = parts.collect::<Vec<&str>>();
     let args: Vec<&str> = collected.iter().filter(|arg| !arg.starts_with('-')).cloned().collect();
     let options: Vec<&str> = collected.iter().filter(|arg| arg.starts_with('-')).cloned().collect();
+    let get_arg = |idx: usize, name: &str| args.get(idx)
+        .map(|s| *s).ok_or(AppError::MissingArgument(String::from(name)));
 
     match cmd {
         Some("help" | "h" | "?") => Ok(Command::Help(args.join(" ").into())),
         Some("clear" | "cls") => Ok(Command::Clear),
         Some("exit" | "quit" | "q") => Ok(Command::Exit),
-        Some("generate" | "gen") => Ok(Command::Generate),
+        Some("generate" | "gen") => {
+            let params = PasswordParameters {
+                length: get_arg(0, "length")?.parse().unwrap(),
+                symbols: options.contains(&"-copy"),
+                avoid_ambiguous: options.contains(&"-avoid-ambiguous"),
+            };
+            let copy = options.contains(&"-copy");
+            Ok(Command::Generate(params, copy))
+        },
         Some("analyze" | "scan") => {
-            let password = args.get(0).ok_or(AppError::MissingArgument(String::from("password")))?;
+            let password = get_arg(0, "password")?;
             Ok(Command::Analyze(password.to_string()))
         },
         Some("panic") => Ok(Command::Panic),
@@ -23,6 +33,8 @@ pub fn parse_cmd(input: &str) -> Result<Command, AppError> {
         _ => Err(AppError::InvalidCommand),
     }
 }
+
+
 
 pub fn parse_vault_cmd(args: Vec<&str>, opts: Vec<&str>) -> Result<Command, AppError> {
     let get_arg = |idx: usize, name: &str| args.get(idx)
