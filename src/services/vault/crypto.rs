@@ -1,4 +1,4 @@
-use crate::services::vault::constants::{NONCE_LENGTH, SALT_LENGTH};
+use crate::utils::constants::{NONCE_LENGTH, SALT_LENGTH};
 use crate::domain::vault::vault::Vault;
 use aes_gcm_siv::{
     aead::{generic_array::GenericArray, Aead, KeyInit},

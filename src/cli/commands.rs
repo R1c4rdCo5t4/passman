@@ -1,4 +1,4 @@
-use std::fs;
+use std::{fs, thread};
 use secrecy::{ExposeSecret, SecretBox};
 use crate::cli::io::{read_line_hidden_with, read_line_with, clear_clipboard, clear_console, copy_to_clipboard};
 use crate::domain::app::state::AppState;
@@ -6,6 +6,7 @@ use crate::domain::cli::commands::{Command, VaultCommand};
 use crate::domain::cli::field::Field;
 use crate::domain::cli::password_params::PasswordParams;
 use crate::services::vault::operations::{add_to_vault, close_vault, create_vault, delete_from_vault, delete_vault, in_vault, list_vaults, open_vault, show_vault, update_vault, vault_exists};
+use crate::utils::constants::CLIPBOARD_CLEAR_TIMEOUT;
 
 const HELP_FILE_PATH: &str = "HELP.txt";
 type CommandResult = Result<Option<String>, &'static str>;
@@ -131,6 +132,13 @@ fn vault_cmd(command: VaultCommand, state: &mut AppState) -> CommandResult {
                 Field::Password => entry.password.expose_secret().clone(),
             };
             copy_to_clipboard(text);
+
+            // launch auto-clear clipboard thread
+            thread::spawn(move || {
+                thread::sleep(CLIPBOARD_CLEAR_TIMEOUT.to_std().unwrap());
+                clear_clipboard();
+            });
+
             return Ok(Some(format!("Copied {} to clipboard", field.to_string().to_lowercase())))
         }
         VaultCommand::Destroy => {

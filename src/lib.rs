@@ -26,11 +26,11 @@ pub mod services {
     pub mod vault {
         pub mod crypto;
         pub mod vault_manager;
-        pub mod constants;
         pub mod operations;
     }
 }
 
 pub mod utils {
     pub mod vectors;
+    pub mod constants;
 }

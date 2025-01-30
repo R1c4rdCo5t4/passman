@@ -4,7 +4,7 @@ use zeroize::Zeroize;
 use crate::domain::app::session::AppSession;
 use crate::domain::app::state::AppState;
 use crate::domain::cli::field::Field;
-use crate::services::vault::constants::SESSION_TTL;
+use crate::utils::constants::SESSION_TTL;
 use crate::services::vault::vault_manager::VaultManager;
 use crate::domain::vault::password_entry::{PasswordEntry, PasswordEntryDebug};
 use crate::domain::vault::vault::Vault;
