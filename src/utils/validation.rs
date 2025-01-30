@@ -1,57 +1,59 @@
 use regex::Regex;
 use lazy_static::lazy_static;
+use crate::domain::app::error::AppError;
 
 const ARG_MAX_LEN: usize = 64;
 const PASSWORD_MAX_LEN: usize = 128;
 const PASSWORD_MIN_LEN: usize = 8;
 
 lazy_static! {
-    static ref ARG_REGEX: Regex = Regex::new(r"^[a-zA-Z0-9_.@+\-/]+$").unwrap();
+    static ref ARG_REGEX: Regex = Regex::new(r"^[a-zA-Z0-9_.@+\-]+$").unwrap();
     static ref UPPERCASE_REGEX: Regex = Regex::new(r"[A-Z]").unwrap();
     static ref LOWERCASE_REGEX: Regex = Regex::new(r"[a-z]").unwrap();
     static ref DIGIT_REGEX: Regex = Regex::new(r"\d").unwrap();
     static ref SPECIAL_CHAR_REGEX: Regex = Regex::new(r#"[!@#$%^&*()_+=\[\]{};:'",.<>?/\\|`~\-\s]"#).unwrap();
 }
 
-fn validate_arg(input: &str, name: &str) -> Result<(), String> {
+pub fn validate_arg(input: &str, name: &str) -> Result<(), AppError> {
+    let invalid_arg_err = AppError::InvalidArgument(name.to_string());
     if input.len() > ARG_MAX_LEN {
-        return Err(format!("Argument too long: {}", name));
+        return Err(invalid_arg_err);
     }
     if input.is_empty() {
-        return Err(format!("Argument cannot be empty: {}", name));
+        return Err(invalid_arg_err);
     }
     // whitelisting validation
     if ARG_REGEX.is_match(input) {
         Ok(())
     } else {
-        Err(format!("Invalid argument: {}", name))
+        Err(invalid_arg_err)
     }
 }
 
-fn validate_password(password: &str) -> Result<(), &'static str> {
+pub fn validate_password(password: &str) -> Result<(), AppError> {
     if password.len() > PASSWORD_MAX_LEN {
-        return Err("Password too long");
+        return Err(AppError::Other("Password too long".to_string()));
     }
     if password.is_empty() {
-        return Err("Password cannot be empty");
+        return Err(AppError::Other("Password cannot be empty".to_string()));
     }
     // blacklisting validation
     if password.chars().any(|c| c.is_control()) {
-        return Err("Invalid password: contains control characters");
+        return Err(AppError::Other("Password cannot contain control characters".to_string()));
     }
     Ok(())
 }
 
-fn validate_password_strength(password: &str) -> Result<(), &'static str> {
+pub fn validate_password_strength(password: &str) -> Result<(), AppError> {
     if password.len() < PASSWORD_MIN_LEN {
-        return Err("Password too short");
+        return Err(AppError::Other("Password too short".to_string()));
     }
     if !(UPPERCASE_REGEX.is_match(password)
         && LOWERCASE_REGEX.is_match(password)
         && DIGIT_REGEX.is_match(password)
         && SPECIAL_CHAR_REGEX.is_match(password)
     ) {
-        return Err("Password must contain at least one uppercase letter, one lowercase letter, one digit, and one special character");
+        return Err(AppError::Other("Password too weak".to_string()));
     }
     Ok(())
 }

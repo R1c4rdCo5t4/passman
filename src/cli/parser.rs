@@ -2,6 +2,7 @@ use crate::domain::app::error::AppError;
 use crate::domain::cli::commands::{Command, VaultCommand};
 use crate::domain::cli::field::Field;
 use crate::domain::cli::password_params::PasswordParams;
+use crate::utils::validation::validate_arg;
 
 pub fn parse_cmd(input: &str) -> Result<Command, AppError> {
     let trimmed = input.trim();
@@ -10,11 +11,14 @@ pub fn parse_cmd(input: &str) -> Result<Command, AppError> {
     let collected = parts.collect::<Vec<&str>>();
     let args: Vec<&str> = collected.iter().filter(|arg| !arg.starts_with('-')).cloned().collect();
     let options: Vec<&str> = collected.iter().filter(|arg| arg.starts_with('-')).cloned().collect();
-    let get_arg = |idx: usize, name: &str| args.get(idx)
-        .map(|s| *s).ok_or(AppError::MissingArgument(String::from(name)));
+    let get_arg = get_args_handler(&args);
 
     match cmd {
-        Some("help" | "h" | "?") => Ok(Command::Help(args.join(" ").into())),
+        Some("help" | "h" | "?") => {
+            let cmd_arg = args.join(" ");
+            validate_arg(&cmd_arg, "command")?;
+            Ok(Command::Help(cmd_arg.into()))
+        }
         Some("clear" | "cls") => Ok(Command::Clear),
         Some("exit" | "quit" | "q") => Ok(Command::Exit),
         Some("generate" | "gen") => {
@@ -31,16 +35,13 @@ pub fn parse_cmd(input: &str) -> Result<Command, AppError> {
             Ok(Command::Analyze(password.to_string()))
         },
         Some("panic") => Ok(Command::Panic),
-        Some("vault" | "vlt") => parse_vault_cmd(args, options),
+        Some("vault" | "vlt") => parse_vault_cmd(&args, options),
         _ => Err(AppError::InvalidCommand),
     }
 }
 
-
-
-pub fn parse_vault_cmd(args: Vec<&str>, opts: Vec<&str>) -> Result<Command, AppError> {
-    let get_arg = |idx: usize, name: &str| args.get(idx)
-        .map(|s| *s).ok_or(AppError::MissingArgument(String::from(name)));
+pub fn parse_vault_cmd(args: &Vec<&str>, opts: Vec<&str>) -> Result<Command, AppError> {
+    let get_arg = get_args_handler(&args);
     let sub_cmd = match args.first() {
         Some(&"new") => {
             let name = get_arg(1, "name")?;
@@ -91,5 +92,18 @@ pub fn parse_vault_field(input: &str) -> Result<Field, AppError> {
         "-username" | "-name" | "-user" => Ok(Field::Username),
         "-password" | "-pass" | "-pwd" => Ok(Field::Password),
         _ => Err(AppError::InvalidArgument(input.to_string()))
+    }
+}
+
+fn get_args_handler<'a>(
+    args: &'a Vec<&'a str>,
+) -> impl Fn(usize, &str) -> Result<&'a str, AppError> + 'a {
+    move |index: usize, name: &str| {
+        let arg = args
+            .get(index)
+            .map(|s| *s)
+            .ok_or(AppError::MissingArgument(name.to_string()))?;
+        validate_arg(&arg, name)?;
+        Ok(arg)
     }
 }

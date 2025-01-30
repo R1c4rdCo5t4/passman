@@ -1,15 +1,17 @@
 use std::{fs, thread};
 use secrecy::{ExposeSecret, SecretBox};
 use crate::cli::io::{read_line_hidden_with, read_line_with, clear_clipboard, clear_console, copy_to_clipboard};
+use crate::domain::app::error::AppError;
 use crate::domain::app::state::AppState;
 use crate::domain::cli::commands::{Command, VaultCommand};
 use crate::domain::cli::field::Field;
 use crate::domain::cli::password_params::PasswordParams;
 use crate::services::vault::operations::{add_to_vault, close_vault, create_vault, delete_from_vault, delete_vault, in_vault, list_vaults, open_vault, show_vault, update_vault, vault_exists};
 use crate::utils::constants::CLIPBOARD_CLEAR_TIMEOUT;
+use crate::utils::validation::{validate_arg, validate_password, validate_password_strength};
 
 const HELP_FILE_PATH: &str = "HELP.txt";
-type CommandResult = Result<Option<String>, &'static str>;
+type CommandResult = Result<Option<String>, AppError>;
 
 pub fn execute_cmd(cmd: Command, state: &mut AppState) -> CommandResult {
     match cmd {
@@ -68,7 +70,7 @@ fn help(cmd: Option<String>) -> CommandResult {
                 .collect();
 
             if lines.is_empty() {
-                Err("No help available for provided command")
+                Err(AppError::Other("No help available for provided command".to_string()))
             } else {
                 Ok(Some(lines.join("\n")))
             }
@@ -83,16 +85,20 @@ fn vault_cmd(command: VaultCommand, state: &mut AppState) -> CommandResult {
     match command {
         VaultCommand::New(name) => {
             let password = read_line_hidden_with("Choose master password for vault: ");
+            validate_arg(&password, "password")?;
             let confirm_password = read_line_hidden_with("Confirm master password: ");
+            validate_arg(&confirm_password, "confirm-password")?;
             if password != confirm_password {
-                return Err("Passwords don't match");
+                return Err(AppError::Other("Passwords don't match".to_string()));
             }
+            validate_password_strength(&password)?;
             let secret = SecretBox::new(Box::from(String::from(password)));
             create_vault(&name, &secret);
         }
         VaultCommand::Open(name) => {
             vault_exists(&name)?;
             let password = read_line_hidden_with("Enter master password for vault: ");
+            validate_password(&password)?;
             let secret = SecretBox::new(Box::from(String::from(password)));
             open_vault(&name, &secret, state);
         }
@@ -105,7 +111,9 @@ fn vault_cmd(command: VaultCommand, state: &mut AppState) -> CommandResult {
         VaultCommand::Add(service) => {
             in_vault(state)?;
             let username = read_line_with("Username: ");
+            validate_arg(&username, "username")?;
             let password = read_line_hidden_with("Password: ");
+            validate_password(&password)?;
             add_to_vault(&service, &username, &password, state);
         }
         VaultCommand::Update(service, field, value) => {
@@ -124,7 +132,7 @@ fn vault_cmd(command: VaultCommand, state: &mut AppState) -> CommandResult {
             in_vault(state)?;
             let entry_opt = state.session.as_mut().unwrap().vault.entries.iter().find(|entry| entry.service == service);
             if entry_opt.is_none() {
-                return Err("Service not found");
+                return Err(AppError::Other("Service not found".to_string()));
             }
             let entry = entry_opt.unwrap();
             let text = match field {

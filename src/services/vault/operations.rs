@@ -1,6 +1,7 @@
 use chrono::{Utc};
 use secrecy::{ExposeSecret, SecretBox};
 use zeroize::Zeroize;
+use crate::domain::app::error::AppError;
 use crate::domain::app::session::AppSession;
 use crate::domain::app::state::AppState;
 use crate::domain::cli::field::Field;
@@ -39,14 +40,14 @@ pub fn close_vault(state: &mut AppState) {
     }
 }
 
-pub fn show_vault(service: Option<String>, expose: bool, state: &mut AppState) -> Result<(), &'static str> {
+pub fn show_vault(service: Option<String>, expose: bool, state: &mut AppState) -> Result<(), AppError> {
     let entries = state.session.as_mut().unwrap().vault.entries.iter();
     let filtered: Vec<&PasswordEntry> = match service.clone() {
         Some(s) => entries.filter(|entry| entry.service == s).collect(),
         None => entries.collect(),
     };
     if service.is_some() && filtered.is_empty() {
-        return Err("Service not found");
+        return Err(AppError::Other("Service not found".to_string()));
     }
     for entry in filtered {
         println!("{:?}", PasswordEntryDebug { entry, expose });
@@ -77,7 +78,7 @@ pub fn add_to_vault(service: &str, username: &str, password: &str, state: &mut A
     VaultManager::save(&session.name, &session.secret, &session.vault).expect("Failed to save vault");
 }
 
-pub fn update_vault(service: &str, field: &Field, value: &str, state: &mut AppState) -> Result<(), &'static str> {
+pub fn update_vault(service: &str, field: &Field, value: &str, state: &mut AppState) -> Result<(), AppError> {
     let session = state.session.as_mut().unwrap();
     let entry = get_vault_entry(service, &mut session.vault)?;
     match field {
@@ -88,33 +89,33 @@ pub fn update_vault(service: &str, field: &Field, value: &str, state: &mut AppSt
     Ok(())
 }
 
-pub fn delete_from_vault(service: &str, state: &mut AppState) -> Result<(), &'static str> {
+pub fn delete_from_vault(service: &str, state: &mut AppState) -> Result<(), AppError> {
     let session = state.session.as_mut().unwrap();
     let service_name = get_vault_entry(service, &mut session.vault)?.service.clone();
     session.vault.entries.retain(|e| e.service != service_name);
     Ok(())
 }
 
-pub fn in_vault(state: &AppState) -> Result<(), &'static str> {
+pub fn in_vault(state: &AppState) -> Result<(), AppError> {
     if state.session.is_some() {
         Ok(())
     } else {
-        Err("No vault opened")
+        Err(AppError::Other("No vault opened".to_string()))
     }
 }
 
 
-pub fn vault_exists(name: &str) -> Result<(), &'static str> {
+pub fn vault_exists(name: &str) -> Result<(), AppError> {
     if VaultManager::exists(&name) {
         Ok(())
     } else {
-        Err("Vault does not exist")
+        Err(AppError::Other("Vault not found".to_string()))
     }
 }
 
-fn get_vault_entry<'a>(service: &str, vault: &'a mut Vault) -> Result<&'a mut PasswordEntry, &'static str> {
+fn get_vault_entry<'a>(service: &str, vault: &'a mut Vault) -> Result<&'a mut PasswordEntry, AppError> {
     vault.entries
         .iter_mut()
         .find(|entry| entry.service == service)
-        .ok_or("Service not found")
+        .ok_or(AppError::Other("Service not found".to_string()))
 }

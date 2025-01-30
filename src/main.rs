@@ -5,7 +5,6 @@ use ctrlc::set_handler;
 use passman::cli::commands::execute_cmd;
 use passman::cli::io::{read_line_with_prefix, clear_console};
 use passman::cli::parser::parse_cmd;
-use passman::domain::app::error::AppError;
 use passman::domain::app::state::AppState;
 
 fn main() {
@@ -44,14 +43,10 @@ fn main() {
                                     println!("{}", m);
                                 }
                             }
-                            Err(err) => eprintln!("{}", err)
+                            Err(err) => println!("{}", err)
                         }
                     },
-                    Err(err) => match err {
-                        AppError::InvalidCommand => eprintln!("Invalid command: {}", line),
-                        AppError::InvalidArgument(arg) => eprintln!("Invalid argument: {}", arg),
-                        AppError::MissingArgument(arg) => eprintln!("Missing argument: {}", arg),
-                    }
+                    Err(err) => println!("{}", err)
                 }
                 let vault = state.session.as_ref().map(|s| s.name.clone());
                 vault_tx.send(vault).unwrap_or_else(|e| {
