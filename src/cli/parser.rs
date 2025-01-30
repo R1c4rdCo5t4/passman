@@ -29,9 +29,12 @@ pub fn parse_cmd(input: &str) -> Result<Command, AppError> {
         Some("clear" | "cls") => Ok(Command::Clear),
         Some("exit" | "quit" | "q") => Ok(Command::Exit),
         Some("generate" | "gen") => {
+            let length = get_arg(0, "length")?
+                .parse()
+                .unwrap_or(Err(AppError::InvalidArgument("length".to_string()))?);
             let params = PasswordParams {
-                length: get_arg(0, "length")?.parse().unwrap(),
-                symbols: options.contains(&"-copy"),
+                length,
+                symbols: options.contains(&"-symbols"),
                 avoid_ambiguous: options.contains(&"-avoid-ambiguous"),
             };
             let copy = options.contains(&"-copy");
