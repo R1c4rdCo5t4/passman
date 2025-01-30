@@ -9,10 +9,10 @@ Available Commands:
   vault list                                 > List all vaults
   vault show [<service>] [-expose]           > Show all or specific credentials in the vault
   vault add <service>                        > Add new credentials to the vault
-  vault update <service> -<field> <value>    > Update a specific field of credentials
+  vault update <service> -<field> <value>    > Update a specific field of credentials 
   vault delete <service>                     > Delete credentials
   vault copy <service> [-<field>]            > Copy a specific field to the clipboard
   vault destroy                              > Delete vault
   analyze <password>                         > Analyze the strength of a password
   generate <length> [-symbols]               > Generate a new password
-           [-copy] [-avoid-ambiguous]
+           [-copy]  [-avoid-ambiguous]  

@@ -26,7 +26,7 @@
 - 🧹 Credential leak prevention with the `secrecy` and `zeroize` libraries
 - 🛡️ Session and clipboard TTL
 
-## Commands
+## 👨‍💻 Commands
 
 ```
   help [<command>]                           > Get this message or help for specific commands
@@ -45,13 +45,47 @@
   vault destroy                              > Delete vault
   analyze <password>                         > Analyze the strength of a password
   generate <length> [-symbols]               > Generate a new password
-           [-copy] [-avoid-ambiguous]                               
+           [-copy]  [-avoid-ambiguous]                               
 ```
 
 ---
 
-## Running
+## 🚀 Running
 
+### 📋 Prerequisites
+
+- [Rust](https://www.rust-lang.org/)
+
+### 🛠️ Setup
+
+1. Clone the repository
+
+```sh
+git clone https://github.com/R1c4rdCo5t4/passman.git
 ```
+
+2. Change to the project directory
+
+```sh
+cd passman
+```
+
+3. Build the project
+
+```sh
+cargo build
+```
+
+4. Run the project
+
+```sh
 cargo run
 ```
+
+## 🤝 Contributing
+
+Contributions are welcome! Please open an issue or submit a pull request.
+
+## 📄 License
+
+See [`LICENSE`](/LICENSE) for more information.
