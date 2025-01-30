@@ -16,7 +16,16 @@ impl Zeroize for PasswordEntry {
     fn zeroize(&mut self) {
         self.service.zeroize();
         self.username.zeroize();
-        self.password = SecretBox::new(Box::from(String::new()));
+
+        let mut empty = String::new();
+        empty.zeroize(); // prevent old password from being left in memory
+        self.password = SecretBox::new(Box::new(empty));
+    }
+}
+
+impl Drop for PasswordEntry {
+    fn drop(&mut self) {
+        self.zeroize();
     }
 }
 

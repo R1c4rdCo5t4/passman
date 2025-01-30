@@ -1,12 +1,13 @@
-use chrono::{Duration, Utc};
+use chrono::{Utc};
 use secrecy::{ExposeSecret, SecretBox};
 use zeroize::Zeroize;
-use crate::cli::commands::models::VaultField;
+use crate::domain::app::session::AppSession;
+use crate::domain::app::state::AppState;
+use crate::domain::cli::field::Field;
 use crate::services::vault::constants::SESSION_TTL;
-use crate::services::vault::models::password_entry::{PasswordEntry, PasswordEntryDebug};
-use crate::services::vault::models::vault::Vault;
-use crate::services::vault::vault::VaultManager;
-use crate::state::{AppState, Session};
+use crate::services::vault::vault_manager::VaultManager;
+use crate::domain::vault::password_entry::{PasswordEntry, PasswordEntryDebug};
+use crate::domain::vault::vault::Vault;
 
 pub fn create_vault(name: &str, secret: &SecretBox<String>) {
     VaultManager::create(&*name, &secret).expect("Failed to create vault");
@@ -17,11 +18,11 @@ pub fn open_vault(name: &str, secret: &SecretBox<String>, state: &mut AppState) 
     match result {
         Ok(vault) => {
             state.session = Some(
-                Session {
+                AppSession {
                     vault,
                     name: String::from(name),
                     secret: SecretBox::new(Box::from(secret.expose_secret().clone())),
-                    expires: Utc::now() + Duration::minutes(SESSION_TTL)
+                    expires: Utc::now() + SESSION_TTL
                 }
             );
         }
@@ -76,12 +77,12 @@ pub fn add_to_vault(service: &str, username: &str, password: &str, state: &mut A
     VaultManager::save(&session.name, &session.secret, &session.vault).expect("Failed to save vault");
 }
 
-pub fn update_vault(service: &str, field: &VaultField, value: &str, state: &mut AppState) -> Result<(), &'static str> {
+pub fn update_vault(service: &str, field: &Field, value: &str, state: &mut AppState) -> Result<(), &'static str> {
     let session = state.session.as_mut().unwrap();
     let entry = get_vault_entry(service, &mut session.vault)?;
     match field {
-        VaultField::Username => entry.username = String::from(value),
-        VaultField::Password => entry.password = SecretBox::new(Box::from(String::from(value))),
+        Field::Username => entry.username = String::from(value),
+        Field::Password => entry.password = SecretBox::new(Box::from(String::from(value))),
     }
     VaultManager::save(&session.name, &session.secret, &session.vault).expect("Failed to save vault");
     Ok(())

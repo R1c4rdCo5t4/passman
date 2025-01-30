@@ -1,5 +1,5 @@
 use crate::services::vault::constants::{NONCE_LENGTH, SALT_LENGTH};
-use crate::services::vault::models::vault::Vault;
+use crate::domain::vault::vault::Vault;
 use aes_gcm_siv::{
     aead::{generic_array::GenericArray, Aead, KeyInit},
     Aes256GcmSiv

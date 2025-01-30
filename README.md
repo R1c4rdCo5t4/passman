@@ -22,10 +22,12 @@
 
 ## 🔑 Security
 
-- 🔒 AES-256-GCM-SIV encrypted vault storage
+- 🔒 AES-256-GCM-SIV encryption
 - 🔐 Argon2id key derivation
-- 🧹 Zeroized memory for sensitive data
-- 👤 Session management with TTL expiration
+- 🧹 Credential leak prevention with the `secrecy` and `zeroize` libraries
+- 👤 Vault auto-close after period of inactivity
+- 🛡️ Limit on failed vault unlock attempts
+- ✂️ Clipboard auto-clear after copying credentials
 
 ## Commands
 

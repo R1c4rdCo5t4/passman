@@ -1,5 +1,7 @@
-use crate::cli::commands::models::{Command, PasswordParameters, VaultCommand, VaultField};
-use crate::services::error::AppError;
+use crate::domain::app::error::AppError;
+use crate::domain::cli::commands::{Command, VaultCommand};
+use crate::domain::cli::field::Field;
+use crate::domain::cli::password_params::PasswordParams;
 
 pub fn parse_cmd(input: &str) -> Result<Command, AppError> {
     let trimmed = input.trim();
@@ -16,7 +18,7 @@ pub fn parse_cmd(input: &str) -> Result<Command, AppError> {
         Some("clear" | "cls") => Ok(Command::Clear),
         Some("exit" | "quit" | "q") => Ok(Command::Exit),
         Some("generate" | "gen") => {
-            let params = PasswordParameters {
+            let params = PasswordParams {
                 length: get_arg(0, "length")?.parse().unwrap(),
                 symbols: options.contains(&"-copy"),
                 avoid_ambiguous: options.contains(&"-avoid-ambiguous"),
@@ -44,11 +46,11 @@ pub fn parse_vault_cmd(args: Vec<&str>, opts: Vec<&str>) -> Result<Command, AppE
             let name = get_arg(1, "name")?;
             Ok(VaultCommand::New(name.to_string()))
         },
-        Some(&"open" | &"enter") => {
+        Some(&"open" | &"enter" | &"unlock") => {
             let name = get_arg(1, "name")?;
             Ok(VaultCommand::Open(name.to_string()))
         },
-        Some(&"close" | &"exit") => Ok(VaultCommand::Close),
+        Some(&"close" | &"exit" | &"lock") => Ok(VaultCommand::Close),
         Some(&"list" | &"lst") => Ok(VaultCommand::List),
         Some(&"show") => {
             let service = args.get(1).map(|s| s.to_string());
@@ -74,7 +76,7 @@ pub fn parse_vault_cmd(args: Vec<&str>, opts: Vec<&str>) -> Result<Command, AppE
             let field_opt = opts.get(1);
             let field = match field_opt {
                 Some(f) => parse_vault_field(f)?,
-                None => VaultField::Password,
+                None => Field::Password,
             };
             Ok(VaultCommand::Copy(service.to_string(), field))
         },
@@ -84,10 +86,10 @@ pub fn parse_vault_cmd(args: Vec<&str>, opts: Vec<&str>) -> Result<Command, AppE
     Ok(Command::Vault(sub_cmd?))
 }
 
-pub fn parse_vault_field(input: &str) -> Result<VaultField, AppError> {
+pub fn parse_vault_field(input: &str) -> Result<Field, AppError> {
     match input.to_lowercase().as_str() {
-        "-username" | "-name" | "-user" => Ok(VaultField::Username),
-        "-password" | "-pass" | "-pwd" => Ok(VaultField::Password),
+        "-username" | "-name" | "-user" => Ok(Field::Username),
+        "-password" | "-pass" | "-pwd" => Ok(Field::Password),
         _ => Err(AppError::InvalidArgument(input.to_string()))
     }
 }

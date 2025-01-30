@@ -2,12 +2,11 @@ use std::sync::mpsc;
 use std::sync::mpsc::{Receiver, Sender};
 use std::thread;
 use ctrlc::set_handler;
-use passman::cli::commands::commands::{execute_cmd};
-use passman::cli::commands::parser::{parse_cmd};
-use passman::cli::stdin::{read_line_with_prefix};
-use passman::cli::stdout::{clear_console};
-use passman::services::error::AppError;
-use passman::state::AppState;
+use passman::cli::commands::execute_cmd;
+use passman::cli::io::{read_line_with_prefix, clear_console};
+use passman::cli::parser::parse_cmd;
+use passman::domain::app::error::AppError;
+use passman::domain::app::state::AppState;
 
 fn main() {
     clear_console();
