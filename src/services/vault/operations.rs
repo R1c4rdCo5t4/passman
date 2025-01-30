@@ -23,7 +23,7 @@ pub fn open_vault(name: &str, secret: &SecretBox<String>, state: &mut AppState) 
                     vault,
                     name: String::from(name),
                     secret: SecretBox::new(Box::from(secret.expose_secret().clone())),
-                    expires: Utc::now() + SESSION_TTL
+                    expires_at: Utc::now() + SESSION_TTL
                 }
             );
         }

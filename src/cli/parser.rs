@@ -15,8 +15,15 @@ pub fn parse_cmd(input: &str) -> Result<Command, AppError> {
 
     match cmd {
         Some("help" | "h" | "?") => {
-            let cmd_arg = args.join(" ");
-            validate_arg(&cmd_arg, "command")?;
+            let cmd_arg: Option<String> = {
+                let joined = args.join(" ");
+                if joined.is_empty() {
+                    None
+                } else {
+                    validate_arg(&joined, "command")?;
+                    Some(joined)
+                }
+            };
             Ok(Command::Help(cmd_arg.into()))
         }
         Some("clear" | "cls") => Ok(Command::Clear),
@@ -43,7 +50,7 @@ pub fn parse_cmd(input: &str) -> Result<Command, AppError> {
 pub fn parse_vault_cmd(args: &Vec<&str>, opts: Vec<&str>) -> Result<Command, AppError> {
     let get_arg = get_args_handler(&args);
     let sub_cmd = match args.first() {
-        Some(&"new") => {
+        Some(&"new" | &"create") => {
             let name = get_arg(1, "name")?;
             Ok(VaultCommand::New(name.to_string()))
         },
@@ -53,7 +60,7 @@ pub fn parse_vault_cmd(args: &Vec<&str>, opts: Vec<&str>) -> Result<Command, App
         },
         Some(&"close" | &"exit" | &"lock") => Ok(VaultCommand::Close),
         Some(&"list" | &"lst") => Ok(VaultCommand::List),
-        Some(&"show") => {
+        Some(&"show" | &"inspect") => {
             let service = args.get(1).map(|s| s.to_string());
             let expose = ["-expose", "-unmask"].iter().any(|opt| opts.contains(opt));
             Ok(VaultCommand::Show(service, expose))

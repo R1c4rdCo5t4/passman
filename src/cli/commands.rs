@@ -1,13 +1,13 @@
 use std::{fs, thread};
 use secrecy::{ExposeSecret, SecretBox};
-use crate::cli::io::{read_line_hidden_with, read_line_with, clear_clipboard, clear_console, copy_to_clipboard};
+use crate::cli::io::{read_line_hidden_with, read_line_with, clear_clipboard, clear_console, copy_to_clipboard, confirmation_prompt, confirmation_prompt_with};
 use crate::domain::app::error::AppError;
 use crate::domain::app::state::AppState;
 use crate::domain::cli::commands::{Command, VaultCommand};
 use crate::domain::cli::field::Field;
 use crate::domain::cli::password_params::PasswordParams;
 use crate::services::vault::operations::{add_to_vault, close_vault, create_vault, delete_from_vault, delete_vault, in_vault, list_vaults, open_vault, show_vault, update_vault, vault_exists};
-use crate::utils::constants::CLIPBOARD_CLEAR_TIMEOUT;
+use crate::utils::constants::CLIPBOARD_TTL;
 use crate::utils::validation::{validate_arg, validate_password, validate_password_strength};
 
 const HELP_FILE_PATH: &str = "HELP.txt";
@@ -84,6 +84,10 @@ fn help(cmd: Option<String>) -> CommandResult {
 fn vault_cmd(command: VaultCommand, state: &mut AppState) -> CommandResult {
     match command {
         VaultCommand::New(name) => {
+            match vault_exists(&name) {
+                Ok(_) => return Err(AppError::Other("Vault already exists".to_string())),
+                Err(_) => {}
+            }
             let password = read_line_hidden_with("Choose master password for vault: ");
             validate_arg(&password, "password")?;
             let confirm_password = read_line_hidden_with("Confirm master password: ");
@@ -106,10 +110,27 @@ fn vault_cmd(command: VaultCommand, state: &mut AppState) -> CommandResult {
         VaultCommand::List => list_vaults(),
         VaultCommand::Show(service, expose) => {
             in_vault(state)?;
+            check_session_ttl(state)?;
+
+            if service.is_none() && expose {
+                if !confirmation_prompt_with("This will expose all credentials in the vault. Do you want to continue?")? {
+                    return Ok(None);
+                }
+            }
             show_vault(service, expose, state)?
         }
         VaultCommand::Add(service) => {
             in_vault(state)?;
+            check_session_ttl(state)?;
+
+            let duplicate_entry = state.session.as_mut().unwrap().vault.entries.iter().find(|entry| entry.service == service);
+            if duplicate_entry.is_some() {
+                if !confirmation_prompt_with("Service already exists. Do you want to update it?")? {
+                    return Ok(None);
+                } else {
+                    delete_from_vault(&service, state)?;
+                }
+            }
             let username = read_line_with("Username: ");
             validate_arg(&username, "username")?;
             let password = read_line_hidden_with("Password: ");
@@ -118,18 +139,21 @@ fn vault_cmd(command: VaultCommand, state: &mut AppState) -> CommandResult {
         }
         VaultCommand::Update(service, field, value) => {
             in_vault(state)?;
-            if confirmation_prompt() {
+            check_session_ttl(state)?;
+            if confirmation_prompt()? {
                 update_vault(&service, &field, &value, state)?;
             }
         }
         VaultCommand::Delete(service) => {
             in_vault(state)?;
-            if confirmation_prompt() {
+            check_session_ttl(state)?;
+            if confirmation_prompt()? {
                 delete_from_vault(&service, state)?;
             }
         }
         VaultCommand::Copy(service, field) => {
             in_vault(state)?;
+            check_session_ttl(state)?;
             let entry_opt = state.session.as_mut().unwrap().vault.entries.iter().find(|entry| entry.service == service);
             if entry_opt.is_none() {
                 return Err(AppError::Other("Service not found".to_string()));
@@ -143,7 +167,7 @@ fn vault_cmd(command: VaultCommand, state: &mut AppState) -> CommandResult {
 
             // launch auto-clear clipboard thread
             thread::spawn(move || {
-                thread::sleep(CLIPBOARD_CLEAR_TIMEOUT.to_std().unwrap());
+                thread::sleep(CLIPBOARD_TTL.to_std().unwrap());
                 clear_clipboard();
             });
 
@@ -151,7 +175,8 @@ fn vault_cmd(command: VaultCommand, state: &mut AppState) -> CommandResult {
         }
         VaultCommand::Destroy => {
             in_vault(state)?;
-            if confirmation_prompt() {
+            check_session_ttl(state)?;
+            if confirmation_prompt()? {
                 delete_vault(state);
                 close_vault(state);
             }
@@ -160,7 +185,13 @@ fn vault_cmd(command: VaultCommand, state: &mut AppState) -> CommandResult {
     Ok(None)
 }
 
-fn confirmation_prompt() -> bool {
-    let input = read_line_with("Are you sure? (y/n): ").to_lowercase();
-    input == "y" || input == "yes"
+fn check_session_ttl(state: &mut AppState) -> Result<(), AppError> {
+    let now = chrono::Utc::now();
+    let session = state.session.as_ref().unwrap_or_else(|| panic!("Session not found"));
+    if session.expires_at < now {
+        close_vault(state);
+        Err(AppError::Other("Session expired".to_string()))
+    } else {
+        Ok(())
+    }
 }

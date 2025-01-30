@@ -6,5 +6,5 @@ pub struct AppSession {
     pub vault: Vault,
     pub name: String,
     pub secret: SecretBox<String>,
-    pub expires: DateTime<Utc>,
+    pub expires_at: DateTime<Utc>,
 }

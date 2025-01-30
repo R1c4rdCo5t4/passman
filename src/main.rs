@@ -1,5 +1,4 @@
 use std::sync::mpsc;
-use std::sync::mpsc::{Receiver, Sender};
 use std::thread;
 use ctrlc::set_handler;
 use passman::cli::commands::execute_cmd;
@@ -12,28 +11,31 @@ fn main() {
     println!("Welcome to Passman!");
     println!("Type 'help' to see the list of commands.");
 
-    let (tx, rx): (Sender<String>, Receiver<String>) = mpsc::channel();
-    let (vault_tx, vault_rx): (Sender<Option<String>>, Receiver<Option<String>>) = mpsc::channel();
-    let tx_ctrl = tx.clone();
-    set_handler(move || {
-        let _ = tx_ctrl.send(String::from("exit")); // send exit command on ctrl+c
-    }).expect("Error setting ctrl+c handler");
+    let (in_tx, in_rx) = mpsc::channel();
+    let (out_tx, out_rx) = mpsc::channel();
+    let tx_ctrl = in_tx.clone();
 
-    let input_tx = tx.clone();
-    let input_thread = thread::spawn(move || {
+    // ctrl+c handler
+    let _ = set_handler(move || {
+        let _ = tx_ctrl.send(String::from("exit"));
+    });
+
+    // input thread
+    thread::spawn(move || {
         let mut curr_vault: Option<String> = None;
         loop {
             let line = read_line_with_prefix(curr_vault.as_deref());
-            if input_tx.send(line).is_err() {
-                break; // stop if main thread is gone
+            if in_tx.send(line).is_err() {
+                break;
             }
-            curr_vault = vault_rx.recv().unwrap_or(None);
+            curr_vault = out_rx.recv().unwrap_or(None);
         }
     });
 
+    // main loop
     let mut state = AppState { session: None };
     loop {
-        match rx.recv() {
+        match in_rx.recv() {
             Ok(line) => {
                 match parse_cmd(&line) {
                     Ok(cmd) => {
@@ -49,12 +51,9 @@ fn main() {
                     Err(err) => println!("{}", err)
                 }
                 let vault = state.session.as_ref().map(|s| s.name.clone());
-                vault_tx.send(vault).unwrap_or_else(|e| {
-                    eprintln!("Failed to send session update: {}", e);
-                });
+                let _ = out_tx.send(vault);
             }
             Err(_) => break
         }
     }
-    input_thread.join().expect("Input thread panicked");
 }

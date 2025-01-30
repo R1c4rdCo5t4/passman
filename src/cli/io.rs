@@ -4,12 +4,13 @@ use std::process::Command;
 use arboard::Clipboard;
 use colored::Colorize;
 use rpassword::read_password;
+use crate::domain::app::error::AppError;
 
 pub fn read_line() -> String {
     let mut input = String::new();
     io::stdin()
         .read_line(&mut input)
-        .expect("Failed to read cli");
+        .expect("Failed to read line");
     input.trim().to_string()
 }
 
@@ -37,6 +38,20 @@ pub fn read_line_hidden_with(content: &str) -> String {
     print!("{}", content);
     io::stdout().flush().expect("Failed to flush stdout");
     read_line_hidden()
+}
+
+pub fn confirmation_prompt() -> Result<bool, AppError> {
+    confirmation_prompt_with("Are you sure?")
+}
+
+pub fn confirmation_prompt_with(message: &str) -> Result<bool, AppError> {
+    let text = format!("{} (y/n): ", message);
+    let input = read_line_with(&text).to_lowercase();
+    match input.as_str() {
+        "y" | "yes" => Ok(true),
+        "n" | "no" => Ok(false),
+        _ => Err(AppError::Other("Invalid choice".to_string()))
+    }
 }
 
 pub fn print_prefix(vault: Option<&str>) {
