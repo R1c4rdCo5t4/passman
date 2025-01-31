@@ -4,7 +4,7 @@ mod mocks {
 }
 
 #[cfg(test)]
-mod tests {
+mod test_vault_service {
     use passman::domain::app::state::AppState;
     use passman::services::vault_service::VaultService;
     use secrecy::SecretBox;
