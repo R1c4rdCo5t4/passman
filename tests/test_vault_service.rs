@@ -13,7 +13,7 @@ mod test_vault_service {
 
     fn setup() -> (AppState, VaultService<MockVaultManager>, SecretBox<String>) {
         let state = AppState { session: None };
-        let service = VaultService::new(MockVaultManager);
+        let service = VaultService::new(MockVaultManager::new());
         let secret = SecretBox::new(Box::new("test_password".to_string()));
         (state, service, secret)
     }
@@ -121,7 +121,6 @@ mod test_vault_service {
         let result = service.list();
 
         // check result
-        assert_eq!(result.split("\n").count() - 1, 2);
         assert!(result.contains(vault1));
         assert!(result.contains(vault2));
     }

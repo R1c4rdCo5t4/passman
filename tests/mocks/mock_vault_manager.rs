@@ -1,6 +1,5 @@
 use std::collections::HashMap;
-use std::sync::{Mutex};
-use lazy_static::lazy_static;
+use std::sync::{Arc, Mutex};
 use secrecy::{ExposeSecret, SecretBox};
 use passman::domain::vault::vault::Vault;
 use passman::domain::vault::vault_file::VaultFile;
@@ -8,12 +7,19 @@ use passman::repository::vault::vault_crypto::VaultCrypto;
 use passman::repository::vault::vault_manager_trait::VaultManagerTrait;
 
 #[cfg(test)]
-lazy_static! {
-    static ref MOCK_STORAGE: Mutex<HashMap<String, (VaultFile, SecretBox<String>)>> = Mutex::new(HashMap::new());
+pub struct MockVaultManager {
+    storage: Arc<Mutex<HashMap<String, (VaultFile, SecretBox<String>)>>>
 }
 
 #[cfg(test)]
-pub struct MockVaultManager;
+#[cfg(test)]
+impl MockVaultManager {
+    pub fn new() -> Self {
+        Self {
+            storage: Arc::new(Mutex::new(HashMap::new())),
+        }
+    }
+}
 
 #[cfg(test)]
 impl VaultManagerTrait for MockVaultManager {
@@ -24,7 +30,7 @@ impl VaultManagerTrait for MockVaultManager {
 
     fn save(&self, name: &str, password: &SecretBox<String>, vault: &Vault) -> Result<(), String> {
         let (salt, nonce, ciphertext) = VaultCrypto::encrypt(vault, password);
-        let mut vaults = MOCK_STORAGE.lock().unwrap();
+        let mut vaults = self.storage.lock().unwrap();
         let secret = SecretBox::new(Box::new(password.expose_secret().to_string()));
         vaults.insert(
             name.to_string(),
@@ -34,7 +40,7 @@ impl VaultManagerTrait for MockVaultManager {
     }
 
     fn load(&self, name: &str, password: &SecretBox<String>) -> Result<Vault, String> {
-        let vaults = MOCK_STORAGE.lock().unwrap();
+        let vaults = self.storage.lock().unwrap();
         let (vault_file, stored_pass) = vaults.get(name)
             .ok_or("Vault not found")?;
 
@@ -51,18 +57,18 @@ impl VaultManagerTrait for MockVaultManager {
     }
 
     fn list(&self) -> Result<Vec<String>, String> {
-        let vaults = MOCK_STORAGE.lock().unwrap();
+        let vaults = self.storage.lock().unwrap();
         Ok(vaults.keys().cloned().collect())
     }
 
     fn delete(&self, name: &str) -> Result<(), String> {
-        let mut vaults = MOCK_STORAGE.lock().unwrap();
+        let mut vaults = self.storage.lock().unwrap();
         vaults.remove(name);
         Ok(())
     }
 
     fn exists(&self, name: &str) -> Result<bool, String> {
-        let vaults = MOCK_STORAGE.lock().unwrap();
+        let vaults = self.storage.lock().unwrap();
         Ok(vaults.contains_key(name))
     }
 }
