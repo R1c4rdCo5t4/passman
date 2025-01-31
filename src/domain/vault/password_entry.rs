@@ -30,8 +30,8 @@ impl Drop for PasswordEntry {
 }
 
 pub struct PasswordEntryDebug<'a> {
-    pub(crate) entry: &'a PasswordEntry,
-    pub(crate) expose: bool,
+    pub entry: &'a PasswordEntry,
+    pub expose: bool,
 }
 
 impl PasswordEntry {

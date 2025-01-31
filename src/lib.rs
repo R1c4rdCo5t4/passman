@@ -23,15 +23,18 @@ pub mod domain {
 }
 
 pub mod services {
+    pub mod vault_service;
+}
+
+pub mod repository {
     pub mod vault {
-        pub mod crypto;
+        pub mod vault_crypto;
         pub mod vault_manager;
-        pub mod operations;
+        pub mod vault_manager_trait;
     }
 }
 
 pub mod utils {
-    pub mod vectors;
     pub mod constants;
     pub mod validation;
 }
