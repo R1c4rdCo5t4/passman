@@ -45,7 +45,9 @@ fn main() {
                         match execute_cmd(cmd, &vault_service, &mut state) {
                             Ok(msg) => {
                                 if let Some(m) = msg {
-                                    println!("{}", m);
+                                    if !m.is_empty() {
+                                        println!("{}", m);
+                                    }
                                 }
                             }
                             Err(err) => println!("{}", err)

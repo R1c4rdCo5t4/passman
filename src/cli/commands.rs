@@ -7,9 +7,9 @@ use crate::domain::cli::commands::{Command, VaultCommand};
 use crate::domain::cli::field::Field;
 use crate::domain::cli::password_params::PasswordParams;
 use crate::repository::vault::vault_manager::VaultManager;
+use crate::services::password_service::PasswordService;
 use crate::services::vault_service::VaultService;
 use crate::utils::constants::{CLIPBOARD_TTL};
-use crate::utils::passwords::{analyze_pwd, generate_pwd};
 use crate::utils::validation::{validate_arg, validate_password, validate_password_strength};
 
 const HELP_FILE_PATH: &str = "HELP.txt";
@@ -51,7 +51,7 @@ fn panic(vault: &VaultService<VaultManager>, state: &mut AppState) -> CommandRes
 }
 
 fn generate_password(params: PasswordParams, copy: bool) -> CommandResult {
-    let result = generate_pwd(params)?;
+    let result = PasswordService::generate(params)?;
     if copy {
         copy_to_clipboard(result);
         Ok(Some("Generated password copied to clipboard".to_string()))
@@ -61,10 +61,9 @@ fn generate_password(params: PasswordParams, copy: bool) -> CommandResult {
 }
 
 fn analyze_password(password: String) -> CommandResult {
-    let (score, classification) = analyze_pwd(password);
+    let (score, classification) = PasswordService::analyze(password);
     Ok(Option::from(format!("Password score: {:.2} ({})", score, classification)))
 }
-
 
 fn help(cmd: Option<String>) -> CommandResult {
     let help_text = fs::read_to_string(HELP_FILE_PATH)
@@ -101,19 +100,18 @@ fn vault_cmd(
 ) -> CommandResult {
     match command {
         VaultCommand::New(name) => {
-            match vault.exists(&name) {
-                Ok(_) => return Err(AppError::Other("Vault already exists".to_string())),
-                Err(_) => {}
+            if let Ok(_) = vault.exists(&name) {
+                return Err(AppError::Other("Vault already exists".to_string()));
             }
             let password = read_line_hidden_with("Choose master password for vault: ");
-            validate_arg(&password, "password")?;
+            validate_password(&password)?;
             let confirm_password = read_line_hidden_with("Confirm master password: ");
-            validate_arg(&confirm_password, "confirm-password")?;
+            validate_password(&confirm_password)?;
             if password != confirm_password {
                 return Err(AppError::Other("Passwords don't match".to_string()));
             }
             validate_password_strength(&password)?;
-            let secret = SecretBox::new(Box::from(String::from(password)));
+            let secret = SecretBox::new(Box::from(password));
             vault.create(&name, &secret);
             Ok(None)
         }
@@ -121,7 +119,7 @@ fn vault_cmd(
             vault.exists(&name)?;
             let password = read_line_hidden_with("Enter master password for vault: ");
             validate_password(&password)?;
-            let secret = SecretBox::new(Box::from(String::from(password)));
+            let secret = SecretBox::new(Box::from(password));
             vault.open(&name, &secret, state)?;
             Ok(None)
         }

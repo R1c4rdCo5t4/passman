@@ -25,11 +25,11 @@ impl VaultManagerTrait for VaultManager {
 
     fn create(&self, name: &str, password: &SecretBox<String>) -> Result<(), String> {
         let vault = Vault { entries: Vec::new() };
-        self.save(&name, &password, &vault)
+        self.save(name, password, &vault)
     }
 
     fn save(&self, name: &str, password: &SecretBox<String>, vault: &Vault) -> Result<(), String> {
-        let (salt, nonce, ciphertext) = VaultCrypto::encrypt(&vault, &password);
+        let (salt, nonce, ciphertext) = VaultCrypto::encrypt(vault, password);
         let vault_file = VaultFile { salt, nonce, ciphertext };
         let data = serde_json::to_vec(&vault_file).map_err(|e| format!("Serialization failed: {}", e))?;
         let path = Self::get_path(Option::from(name));
@@ -42,12 +42,12 @@ impl VaultManagerTrait for VaultManager {
         let data = fs::read(path).expect("Failed to read vault file");
         let vault_file: VaultFile = serde_json::from_slice(&data).expect("Deserialization failed");
         let VaultFile { ciphertext, salt, nonce } = vault_file;
-        VaultCrypto::decrypt(&password, &ciphertext, &salt, &nonce)
+        VaultCrypto::decrypt(password, &ciphertext, &salt, &nonce)
     }
 
     fn list(&self) -> Result<Vec<String>, String> {
         let path = Self::get_path(None);
-        let files = fs::read_dir(&path)
+        let files = fs::read_dir(path)
             .map_err(|e| format!("Failed to read vault directory: {}", e))?;
         files
             .map(|entry| {

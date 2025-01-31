@@ -28,7 +28,7 @@ pub fn read_line_with_prefix(vault: Option<&str>) -> String {
     loop {
         print_prefix(vault);
         let line = read_line();
-        if line.len() > 0 {
+        if !line.is_empty() {
             return line;
         }
     }
@@ -65,7 +65,7 @@ pub fn print_prefix(vault: Option<&str>) {
 pub fn clear_console() {
     if cfg!(target_os = "windows") {
         Command::new("cmd")
-            .args(&["/C", "cls"])
+            .args(["/C", "cls"])
             .status()
             .expect("Failed to clear console");
     } else {

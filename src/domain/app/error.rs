@@ -11,7 +11,7 @@ pub enum AppError {
 impl std::fmt::Display for AppError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            AppError::InvalidCommand => write!(f, "{}", "Invalid command"),
+            AppError::InvalidCommand => write!(f, "Invalid command"),
             AppError::InvalidArgument(arg) => write!(f, "Invalid argument: <{}>", arg),
             AppError::MissingArgument(arg) => write!(f, "Missing argument: <{}>", arg),
             AppError::Other(err) => write!(f, "Error: {}", err),

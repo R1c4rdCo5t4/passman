@@ -24,6 +24,7 @@ pub mod domain {
 
 pub mod services {
     pub mod vault_service;
+    pub mod password_service;
 }
 
 pub mod repository {
@@ -37,5 +38,4 @@ pub mod repository {
 pub mod utils {
     pub mod constants;
     pub mod validation;
-    pub mod passwords;
 }

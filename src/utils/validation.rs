@@ -21,9 +21,6 @@ pub fn validate_password(password: &str) -> Result<(), AppError> {
     if password.len() > PASSWORD_MAX_LEN {
         return Err(AppError::Other("Password too long".to_string()));
     }
-    if password.len() < PASSWORD_MIN_LEN {
-        return Err(AppError::Other("Password too short".to_string()));
-    }
     if password.is_empty() {
         return Err(AppError::Other("Password cannot be empty".to_string()));
     }

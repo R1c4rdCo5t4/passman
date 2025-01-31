@@ -21,11 +21,11 @@ impl<V: VaultManagerTrait> VaultService<V> {
     }
 
     pub fn create(&self, name: &str, secret: &SecretBox<String>) {
-        self.vault.create(&*name, &secret).expect("Failed to create vault");
+        self.vault.create(name, secret).expect("Failed to create vault");
     }
 
     pub fn open(&self, name: &str, secret: &SecretBox<String>, state: &mut AppState) -> Result<(), AppError>{
-        let result = self.vault.load(&name, &secret);
+        let result = self.vault.load(name, secret);
         match result {
             Ok(vault) => {
                 state.session = Some(
@@ -124,7 +124,7 @@ impl<V: VaultManagerTrait> VaultService<V> {
     }
 
     pub fn exists(&self, name: &str) -> Result<(), AppError> {
-        if self.vault.exists(&name).unwrap() {
+        if self.vault.exists(name).unwrap() {
             Ok(())
         } else {
             Err(AppError::Other("Vault not found".to_string()))

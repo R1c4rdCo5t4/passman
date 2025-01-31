@@ -57,13 +57,13 @@ pub fn parse_cmd(input: &str) -> Result<Command, AppError> {
     }
 }
 
-pub fn parse_vault_cmd(args: &Vec<&str>, opts: Vec<&str>) -> Result<Command, AppError> {
+pub fn parse_vault_cmd(args: &[&str], opts: Vec<&str>) -> Result<Command, AppError> {
     let get_arg = |index: usize, name: &str| {
         let arg = args
             .get(index)
             .map(|s| *s)
             .ok_or(AppError::MissingArgument(name.to_string()))?;
-        validate_arg(&arg, name)?;
+        validate_arg(arg, name)?;
         Ok(arg)
     };
     let sub_cmd = match args.first() {
