@@ -80,6 +80,11 @@ pub fn copy_to_clipboard(text: String) {
     clipboard.set_text(text).expect("Failed to copy to clipboard");
 }
 
+pub fn get_clipboard() -> String {
+    let mut clipboard = Clipboard::new().expect("Failed to initialize clipboard");
+    clipboard.get_text().expect("Failed to get clipboard text")
+}
+
 pub fn clear_clipboard() {
     copy_to_clipboard(String::new());
 }

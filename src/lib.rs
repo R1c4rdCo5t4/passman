@@ -37,4 +37,5 @@ pub mod repository {
 pub mod utils {
     pub mod constants;
     pub mod validation;
+    pub mod passwords;
 }

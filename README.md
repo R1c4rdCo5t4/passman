@@ -16,36 +16,35 @@
 
 - ✅ Credentials stored locally in encrypted vaults
 - 👥 Multi-user support with separate vaults
-- 📋 Copy credentials to clipboard
-- 🛠️ Password generator and strength analyzer
+- 📋 Copy and paste credentials from clipboard automatically
+- 🛡️ Secure password generation and analyzer with the `passwords` crate
 
 ## 🔑 Security
 
 - 🔒 AES-256-GCM-SIV encryption
 - 🔐 Argon2id key derivation
-- 🧹 Credential leak prevention with the `secrecy` and `zeroize` libraries
-- 🛡️ Session and clipboard TTL
+- 🧹 Credential leak prevention with the `secrecy` and `zeroize` crates
+- ⚠️️ Session and clipboard TTL
 
 ## 👨‍💻 Commands
 
 ```
-  help [<command>]                           > Get this message or help for specific commands
-  clear                                      > Clear the screen
-  exit                                       > Exit the program
-  panic                                      > Clears clipboard, closes vault, clears screen and exits
-  vault new <name>                           > Create a new vault
-  vault open <name>                          > Enter a vault
-  vault close                                > Exit the current vault
-  vault list                                 > List all vaults
-  vault show [<entry>] [-expose]             > Show all or specific credentials in the vault
-  vault add <entry>                          > Add new credentials to the vault
-  vault update <entry> -<field> <value>      > Update a specific field of credentials 
-  vault delete <entry>                       > Delete credentials
-  vault copy <entry> [-<field>]              > Copy a specific field to the clipboard
-  vault destroy                              > Delete vault
-  analyze <password>                         > Analyze the strength of a password
-  generate <length> [-symbols]               > Generate a new password
-           [-copy]  [-avoid-ambiguous]                               
+  help [<command>]                              > Get this message or help for specific commands
+  clear                                         > Clear the screen
+  exit                                          > Exit the program
+  panic                                         > Clears clipboard, closes vault, clears screen and exits
+  vault new <name>                              > Create a new vault
+  vault open <name>                             > Enter a vault
+  vault close                                   > Exit the current vault
+  vault list                                    > List all vaults
+  vault show [<entry>] [-expose]                > Show all or specific credentials in the vault
+  vault add <entry>                             > Add new credentials to the vault
+  vault update <entry> -<field> <value>         > Update a specific field of credentials 
+  vault delete <entry>                          > Delete credentials
+  vault copy <entry> [-<field>]                 > Copy a specific field to the clipboard
+  vault destroy                                 > Delete vault
+  analyze <password> [-paste]                   > Analyze the strength of a password
+  generate <length> [-copy] [-avoid-ambiguous]  > Generate a new password                                
 ```
 
 ---

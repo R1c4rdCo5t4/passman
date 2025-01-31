@@ -1,18 +1,5 @@
-use regex::Regex;
-use lazy_static::lazy_static;
 use crate::domain::app::error::AppError;
-
-const ARG_MAX_LEN: usize = 64;
-const PASSWORD_MAX_LEN: usize = 128;
-const PASSWORD_MIN_LEN: usize = 8;
-
-lazy_static! {
-    static ref ARG_REGEX: Regex = Regex::new(r"^[a-zA-Z0-9_.@+\-]+$").unwrap();
-    static ref UPPERCASE_REGEX: Regex = Regex::new(r"[A-Z]").unwrap();
-    static ref LOWERCASE_REGEX: Regex = Regex::new(r"[a-z]").unwrap();
-    static ref DIGIT_REGEX: Regex = Regex::new(r"\d").unwrap();
-    static ref SPECIAL_CHAR_REGEX: Regex = Regex::new(r#"[!@#$%^&*()_+=\[\]{};:'",.<>?/\\|`~\-\s]"#).unwrap();
-}
+use crate::utils::constants::*;
 
 pub fn validate_arg(input: &str, name: &str) -> Result<(), AppError> {
     let invalid_arg_err = AppError::InvalidArgument(name.to_string());

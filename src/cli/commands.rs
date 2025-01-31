@@ -8,7 +8,8 @@ use crate::domain::cli::field::Field;
 use crate::domain::cli::password_params::PasswordParams;
 use crate::repository::vault::vault_manager::VaultManager;
 use crate::services::vault_service::VaultService;
-use crate::utils::constants::CLIPBOARD_TTL;
+use crate::utils::constants::{CLIPBOARD_TTL};
+use crate::utils::passwords::{analyze_pwd, generate_pwd};
 use crate::utils::validation::{validate_arg, validate_password, validate_password_strength};
 
 const HELP_FILE_PATH: &str = "HELP.txt";
@@ -49,12 +50,19 @@ fn panic(vault: &VaultService<VaultManager>, state: &mut AppState) -> CommandRes
     exit()
 }
 
-fn generate_password(_: PasswordParams, _: bool) -> CommandResult {
-    todo!()
+fn generate_password(params: PasswordParams, copy: bool) -> CommandResult {
+    let result = generate_pwd(params)?;
+    if copy {
+        copy_to_clipboard(result);
+        Ok(Some("Generated password copied to clipboard".to_string()))
+    } else {
+        Ok(Some(result))
+    }
 }
 
-fn analyze_password(_: String) -> CommandResult {
-    todo!()
+fn analyze_password(password: String) -> CommandResult {
+    let (score, classification) = analyze_pwd(password);
+    Ok(Option::from(format!("Password score: {:.2} ({})", score, classification)))
 }
 
 
