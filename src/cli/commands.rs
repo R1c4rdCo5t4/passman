@@ -107,58 +107,68 @@ fn vault_cmd(
             validate_password_strength(&password)?;
             let secret = SecretBox::new(Box::from(String::from(password)));
             vault.create(&name, &secret);
+            Ok(None)
         }
         VaultCommand::Open(name) => {
             vault.exists(&name)?;
             let password = read_line_hidden_with("Enter master password for vault: ");
             validate_password(&password)?;
             let secret = SecretBox::new(Box::from(String::from(password)));
-            vault.open(&name, &secret, state);
+            vault.open(&name, &secret, state)?;
+            Ok(None)
         }
-        VaultCommand::Close => vault.close(state),
-        VaultCommand::List => vault.list(),
-        VaultCommand::Show(service, expose) => {
+        VaultCommand::Close => {
+            vault.close(state);
+            Ok(None)
+        },
+        VaultCommand::List => {
+            Ok(Some(vault.list()))
+        },
+        VaultCommand::Show(entry, expose) => {
             vault.is_accessible(state)?;
-            if service.is_none() && expose {
+            if entry.is_none() && expose {
                 if !confirmation_prompt_with("This will expose all credentials in the vault. Do you want to continue?")? {
                     return Ok(None);
                 }
             }
-            vault.show(service, expose, state)?
+            Ok(Some(vault.show(entry, expose, state)?))
         }
-        VaultCommand::Add(service) => {
+        VaultCommand::Add(entry) => {
             vault.is_accessible(state)?;
-            let duplicate_entry = state.session.as_mut().unwrap().vault.entries.iter().find(|entry| entry.service == service);
+            let duplicate_entry = state.session.as_mut().unwrap().vault.entries.iter().find(|e| e.name == entry);
             if duplicate_entry.is_some() {
-                if !confirmation_prompt_with("Service already exists. Do you want to update it?")? {
+                if !confirmation_prompt_with("Entry already exists. Do you want to update it?")? {
                     return Ok(None);
                 } else {
-                    vault.delete_entry(&service, state)?;
+                    vault.delete_entry(&entry, state)?;
                 }
             }
             let username = read_line_with("Username: ");
             validate_arg(&username, "username")?;
             let password = read_line_hidden_with("Password: ");
             validate_password(&password)?;
-            vault.add_entry(&service, &username, &password, state);
+            vault.add_entry(&entry, &username, &password, state);
+            Ok(None)
         }
-        VaultCommand::Update(service, field, value) => {
+        VaultCommand::Update(entry, field, value) => {
             vault.is_accessible(state)?;
             if confirmation_prompt()? {
-                vault.update_entry(&service, &field, &value, state)?;
+                vault.update_entry(&entry, &field, &value, state)?;
             }
+            Ok(None)
         }
-        VaultCommand::Delete(service) => {
+        VaultCommand::Delete(entry) => {
             vault.is_accessible(state)?;
             if confirmation_prompt()? {
-                vault.delete_entry(&service, state)?;
+                vault.delete_entry(&entry, state)?;
             }
+            Ok(None)
         }
-        VaultCommand::Copy(service, field) => {
+        VaultCommand::Copy(entry, field) => {
             vault.is_accessible(state)?;
-            let entry_opt = state.session.as_mut().unwrap().vault.entries.iter().find(|entry| entry.service == service);
+            let entry_opt = state.session.as_mut().unwrap().vault.entries.iter().find(|e| e.name == entry);
             if entry_opt.is_none() {
-                return Err(AppError::Other("Service not found".to_string()));
+                return Err(AppError::Other("Entry not found".to_string()));
             }
             let entry = entry_opt.unwrap();
             let text = match field {
@@ -172,8 +182,7 @@ fn vault_cmd(
                 thread::sleep(CLIPBOARD_TTL.to_std().unwrap());
                 clear_clipboard();
             });
-
-            return Ok(Some(format!("Copied {} to clipboard", field.to_string().to_lowercase())))
+            Ok(Some(format!("Copied {} to clipboard", field.to_string().to_lowercase())))
         }
         VaultCommand::Destroy => {
             vault.is_accessible(state)?;
@@ -181,7 +190,7 @@ fn vault_cmd(
                 vault.delete(state);
                 vault.close(state);
             }
+            Ok(None)
         }
     }
-    Ok(None)
 }

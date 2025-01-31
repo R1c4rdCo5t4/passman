@@ -6,7 +6,7 @@ use zeroize::Zeroize;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PasswordEntry {
-    pub service: String,
+    pub name: String,
     pub username: String,
     #[serde(with = "secret_serde")]
     pub password: SecretBox<String>,
@@ -14,7 +14,7 @@ pub struct PasswordEntry {
 
 impl Zeroize for PasswordEntry {
     fn zeroize(&mut self) {
-        self.service.zeroize();
+        self.name.zeroize();
         self.username.zeroize();
 
         let mut empty = String::new();
@@ -40,7 +40,7 @@ impl PasswordEntry {
     }
 }
 
-impl fmt::Debug for PasswordEntryDebug<'_> {
+impl fmt::Display for PasswordEntryDebug<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let password_str = if self.expose {
             self.entry.password.expose_secret().to_string()
@@ -50,7 +50,7 @@ impl fmt::Debug for PasswordEntryDebug<'_> {
         write!(
             f,
             "{}\n  {} {}\n  {} {}\n",
-            self.entry.service.bold().bright_white(),
+            self.entry.name.bold().bright_white(),
             "Username:".italic(),
             self.entry.username.white(),
             "Password:".italic(),

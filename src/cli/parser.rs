@@ -64,32 +64,32 @@ pub fn parse_vault_cmd(args: &Vec<&str>, opts: Vec<&str>) -> Result<Command, App
         Some(&"close" | &"exit" | &"lock") => Ok(VaultCommand::Close),
         Some(&"list" | &"lst") => Ok(VaultCommand::List),
         Some(&"show" | &"inspect") => {
-            let service = args.get(1).map(|s| s.to_string());
+            let entry = args.get(1).map(|s| s.to_string());
             let expose = ["-expose", "-unmask"].iter().any(|opt| opts.contains(opt));
-            Ok(VaultCommand::Show(service, expose))
+            Ok(VaultCommand::Show(entry, expose))
         },
         Some(&"add") => {
-            let service = get_arg(1, "service")?.to_string();
-            Ok(VaultCommand::Add(service))
+            let entry = get_arg(1, "entry")?.to_string();
+            Ok(VaultCommand::Add(entry))
         },
         Some(&"update" | &"up") => {
-            let service = get_arg(1, "service")?.to_string();
+            let entry = get_arg(1, "entry")?.to_string();
             let field = parse_vault_field(opts.get(0).unwrap_or(&""))?;
             let value = get_arg(2, "value")?.to_string();
-            Ok(VaultCommand::Update(service, field, value))
+            Ok(VaultCommand::Update(entry, field, value))
         },
         Some(&"delete" | &"del") => {
-            let service = get_arg(1, "service")?;
-            Ok(VaultCommand::Delete(service.to_string()))
+            let entry = get_arg(1, "entry")?;
+            Ok(VaultCommand::Delete(entry.to_string()))
         },
         Some(&"copy" | &"cp") => {
-            let service = get_arg(1, "service")?;
+            let entry = get_arg(1, "entry")?;
             let field_opt = opts.get(1);
             let field = match field_opt {
                 Some(f) => parse_vault_field(f)?,
                 None => Field::Password,
             };
-            Ok(VaultCommand::Copy(service.to_string(), field))
+            Ok(VaultCommand::Copy(entry.to_string(), field))
         },
         Some(&"destroy" | &"wipe") => Ok(VaultCommand::Destroy),
         _ => return Err(AppError::InvalidCommand),

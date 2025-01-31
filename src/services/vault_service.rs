@@ -24,7 +24,7 @@ impl<V: VaultManagerTrait> VaultService<V> {
         self.vault.create(&*name, &secret).expect("Failed to create vault");
     }
 
-    pub fn open(&self, name: &str, secret: &SecretBox<String>, state: &mut AppState) {
+    pub fn open(&self, name: &str, secret: &SecretBox<String>, state: &mut AppState) -> Result<(), AppError>{
         let result = self.vault.load(&name, &secret);
         match result {
             Ok(vault) => {
@@ -36,10 +36,9 @@ impl<V: VaultManagerTrait> VaultService<V> {
                         expires_at: Utc::now() + SESSION_TTL
                     }
                 );
+                Ok(())
             }
-            Err(e) => {
-                println!("Failed to load vault: {}", e);
-            }
+            Err(e) => Err(AppError::Other(format!("Failed to load vault: {}", e)))
         }
     }
 
@@ -50,19 +49,21 @@ impl<V: VaultManagerTrait> VaultService<V> {
         }
     }
 
-    pub fn show(&self, service: Option<String>, expose: bool, state: &mut AppState) -> Result<(), AppError> {
+    pub fn show(&self, entry: Option<String>, expose: bool, state: &mut AppState) -> Result<String, AppError> {
         let entries = state.session.as_mut().unwrap().vault.entries.iter();
-        let filtered: Vec<&PasswordEntry> = match service.clone() {
-            Some(s) => entries.filter(|entry| entry.service == s).collect(),
+        let filtered: Vec<&PasswordEntry> = match entry.clone() {
+            Some(s) => entries.filter(|entry| entry.name == s).collect(),
             None => entries.collect(),
         };
-        if service.is_some() && filtered.is_empty() {
+        if entry.is_some() && filtered.is_empty() {
             return Err(AppError::Other("Service not found".to_string()));
         }
-        for entry in filtered {
-            println!("{:?}", PasswordEntryDebug { entry, expose });
-        }
-        Ok(())
+        Ok(
+            filtered.iter()
+                .map(|entry| PasswordEntryDebug { entry, expose }.to_string())
+                .collect::<Vec<String>>()
+                .join("\n")
+        )
     }
 
     pub fn delete(&self, state: &mut AppState) {
@@ -70,17 +71,15 @@ impl<V: VaultManagerTrait> VaultService<V> {
         self.vault.delete(&name).expect("Failed to delete vault");
     }
 
-    pub fn list(&self) {
+    pub fn list(&self) -> String {
         let vaults = self.vault.list().expect("Failed to list vaults");
-        for vault in vaults.iter() {
-            println!("{}", vault);
-        }
+        vaults.join("\n")
     }
 
-    pub fn add_entry(&self, service: &str, username: &str, password: &str, state: &mut AppState) {
+    pub fn add_entry(&self, entry: &str, username: &str, password: &str, state: &mut AppState) {
         let session = state.session.as_mut().unwrap();
         let new_entry = PasswordEntry {
-            service: String::from(service),
+            name: String::from(entry),
             username: String::from(username),
             password: SecretBox::new(Box::from(String::from(password))),
         };
@@ -88,9 +87,9 @@ impl<V: VaultManagerTrait> VaultService<V> {
         self.vault.save(&session.name, &session.secret, &session.vault).expect("Failed to save vault");
     }
 
-    pub fn update_entry(&self, service: &str, field: &Field, value: &str, state: &mut AppState) -> Result<(), AppError> {
+    pub fn update_entry(&self, entry: &str, field: &Field, value: &str, state: &mut AppState) -> Result<(), AppError> {
         let session = state.session.as_mut().unwrap();
-        let entry = Self::get_vault_entry(service, &mut session.vault)?;
+        let entry = Self::get_vault_entry(entry, &mut session.vault)?;
         match field {
             Field::Username => entry.username = String::from(value),
             Field::Password => entry.password = SecretBox::new(Box::from(String::from(value))),
@@ -99,10 +98,10 @@ impl<V: VaultManagerTrait> VaultService<V> {
         Ok(())
     }
 
-    pub fn delete_entry(&self, service: &str, state: &mut AppState) -> Result<(), AppError> {
+    pub fn delete_entry(&self, entry: &str, state: &mut AppState) -> Result<(), AppError> {
         let session = state.session.as_mut().unwrap();
-        let service_name = Self::get_vault_entry(service, &mut session.vault)?.service.clone();
-        session.vault.entries.retain(|e| e.service != service_name);
+        let entry = Self::get_vault_entry(entry, &mut session.vault)?.name.clone();
+        session.vault.entries.retain(|e| e.name != entry);
         Ok(())
     }
 
@@ -132,10 +131,10 @@ impl<V: VaultManagerTrait> VaultService<V> {
         }
     }
 
-    fn get_vault_entry<'a>(service: &str, vault: &'a mut Vault) -> Result<&'a mut PasswordEntry, AppError> {
+    fn get_vault_entry<'a>(entry: &str, vault: &'a mut Vault) -> Result<&'a mut PasswordEntry, AppError> {
         vault.entries
             .iter_mut()
-            .find(|entry| entry.service == service)
+            .find(|e| e.name == entry)
             .ok_or(AppError::Other("Service not found".to_string()))
     }
 }

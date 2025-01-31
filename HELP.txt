@@ -7,11 +7,11 @@ Available Commands:
   vault open <name>                          > Enter a vault
   vault close                                > Exit the current vault
   vault list                                 > List all vaults
-  vault show [<service>] [-expose]           > Show all or specific credentials in the vault
-  vault add <service>                        > Add new credentials to the vault
-  vault update <service> -<field> <value>    > Update a specific field of credentials 
-  vault delete <service>                     > Delete credentials
-  vault copy <service> [-<field>]            > Copy a specific field to the clipboard
+  vault show [<entry>] [-expose]             > Show all or specific credentials in the vault
+  vault add <entry>                          > Add new credentials to the vault
+  vault update <entry> -<field> <value>      > Update a specific field of credentials
+  vault delete <entry>                       > Delete credentials
+  vault copy <entry> [-<field>]              > Copy a specific field to the clipboard
   vault destroy                              > Delete vault
   analyze <password>                         > Analyze the strength of a password
   generate <length> [-symbols]               > Generate a new password
